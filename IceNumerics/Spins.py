@@ -101,14 +101,16 @@ class Spins(dict):
 class SquareSpinIce(Spins):
     
     def __init__(self,Sx=1,Sy=1,**kargs):
-        # SquareSpinIce Takes the following arguments upon definition:
-        # Sx (1),
-        # Sy (1),
-        # --------------
-        # Keyword Args:
-        # Periodic (False)
-        # Lattice (1)
-        # Ordering [GroundState,Bias,(Random)]
+        """ SquareSpinIce Takes the following arguments upon definition:
+        Sx (1),
+        Sy (1),
+        --------------
+        Keyword Args:
+        Periodic (False)
+        Lattice (1)
+        Ordering [GroundState,Bias,(Random)]
+        Boundary [(ClosedSpin),ClosedVertex]
+        """
 
         # Parse Keyword Arguments
         
@@ -120,9 +122,12 @@ class SquareSpinIce(Spins):
 
         if 'Ratio' in kargs: self.Ratio = kargs['Ratio']
         else: self.Ratio = 1
+        
+        if 'Boundary' in kargs: self.Boundary = kargs['Boundary']
+        else: self.Boundary = "ClosedSpin"
 
         Center,Direction = SquareSpinIceCalculateGeometry(
-            Sx,Sy,self.lattice,self.ordering,self.Ratio)
+            Sx,Sy,self.lattice,self.ordering,self.Ratio,self.Boundary)
 
         Direction = Direction*self.lattice
         

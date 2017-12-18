@@ -1,18 +1,24 @@
 import numpy as np
 
-def SquareSpinIceCenters(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice):
+def SquareSpinIceConcatenateCenters(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice,Boundary):
+    """ Concatenate Vertical and Horizontal spin arrays """
+    if Boundary == "ClosedSpin":
+        Delta = 0.5
+    elif Boundary == "ClosedVertex":
+        Delta = -0.5
+
     return np.vstack(
     (
         np.hstack(
             (
                 VSpinsX, # X
-                VSpinsY+0.5*Lattice, #Y 
+                VSpinsY+Delta*Lattice, #Y 
                 np.zeros(VSpinsX.shape,float) #Z
                 ) # Centers of Vertical Spins
             ), 
          np.hstack(
             (
-                HSpinsX+0.5*Lattice, #X
+                HSpinsX+Delta*Lattice, #X
                 HSpinsY, #Y
                 np.zeros(HSpinsX.shape,float) #Z
                 ) # Centers of Horizontal Spins
@@ -66,28 +72,35 @@ def SquareSpinIceDirectionRandomOrdering(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice
 
     return VOrderDirectionArray, HOrderDirectionArray
 
-def SquareSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering,Ratio):
-    # This function calculates the positions and directions of the spins
-    # in a square spin ice system. 
+def SquareSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering,Ratio,Boundary):
+    """ 
+    This function calculates the positions and directions of the spins in a square spin ice system. 
     
-    # Create two meshes,
-    # One defines the positions of horizontal spins,
-    # The other defines the positions of vertical spins.
-    # These meshes are then flatened and turned to vertical arrays so that
-    # they can be concatenated to form the array of centers. 
+    It does so by creating two meshes, 
+    where one mesh defines the position of the horizontal spins, 
+    and the other defines the position of the vertical spins.
+    Then a subroutine concatenates the arrays.
+    """
     
     vsoX = np.arange(0,Sx+1)*Lattice
     vsoY = np.arange(0,Sy+1)*Lattice
+    
+    if Boundary == "ClosedSpin":
+        VSpinsX, VSpinsY = np.meshgrid(vsoX,vsoY[0:-1])
+        HSpinsX, HSpinsY = np.meshgrid(vsoX[0:-1],vsoY)
+    elif Boundary == "ClosedVertex":
+        VSpinsX, VSpinsY = np.meshgrid(vsoX[0:-1],vsoY)
+        HSpinsX, HSpinsY = np.meshgrid(vsoX,vsoY[0:-1])
+    else:
+        raise("That Boundary is not in the catalogue")
 
-    VSpinsX, VSpinsY = np.meshgrid(vsoX,vsoY[0:-1])
-    HSpinsX, HSpinsY = np.meshgrid(vsoX[0:-1],vsoY)
 
     VSpinsX = VSpinsX.flatten(1)[None].T
     VSpinsY = VSpinsY.flatten(1)[None].T
     HSpinsX = HSpinsX.flatten(1)[None].T
     HSpinsY = HSpinsY.flatten(1)[None].T
 
-    Center = SquareSpinIceCenters(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice)
+    Center = SquareSpinIceConcatenateCenters(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice,Boundary)
 
     if Ordering == "Random":
         VOrderDirectionArray, HOrderDirectionArray = \
