@@ -93,6 +93,41 @@ class ColloidInTrap():
             (X+PX,Y+PY), radius = W/3, ec='k', fc = 'none'))
         # print([DX,DY])
         
+    def flip(self):
+    """flips the ColloidInTrap by inverting its direction and its colloid attributes"""    
+        self.direction = self.direction*(-1)
+        self.colloid = self.colloid*(-1)
+    
+    def bias(self, vector):
+    """ 
+    Flips the ColloidInTrap to make it point in the direction of vector (dot(colloid,vector)>0)
+    """
+        if not (vector.__class__.__name__=="Vector" \
+            or vector.__class__.__name__=="ndarray" \
+            or vector.__class__.__name__=="list" \
+            or vector.__class__.__name__=="tuple"):
+                raise ValueError("The vector argument must be either a Vector, ndarray, list or tuple")
+        # if vector is 2D, append zero
+        if len(vector)==2:
+            if vector.__class__.__name__=="Vector":
+                vector = Vector(tuple(vector)+Vector([0]))
+            if vector.__class__.__name__=="tuple":
+                vector = vector+0
+            if vector.__class__.__name__=="ndarray":
+                vector = np.hstack((vector,0))
+            if vector.__class__.__name__=="list":
+                vector = vector+[0]
+        elif len(vector)>3:
+            raise ValueError("The vector argument has to be 2 or 3 dimentions")
+            
+        # Flip if when direction is opposite to bias
+        if vector.__class__.__name__=="Vector" or vector.__class__.__name__=="ndarray":
+            if vector.dot(self.direction)<0:
+                self.flip()
+        elif vector.__class__.__name__=="list" or vector.__class__.__name__=="tuple":
+            if Vector(vector).dot(self.direction)<0:
+                self.flip()
+        
 class ColloidalIce(dict):
     # Physical Attributes
     # Geometry
