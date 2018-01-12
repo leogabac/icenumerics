@@ -203,15 +203,15 @@ class ColloidalIce(dict):
          
     def FrameDataToColloids(self,FrameData,Run):
         
-        NumberOfRuns = np.max(FrameData[1,:]);
+        NumberOfRuns = np.max(FrameData['type']);
         
-        FrameData = FrameData[:,FrameData[0,:].argsort()]
+        FrameDataSort = FrameData[FrameData['id'].argsort()]
 
-        X = FrameData[2,FrameData[1,:]==Run+1]
-        Y = FrameData[3,FrameData[1,:]==Run+1]
+        X = FrameData['x'][FrameData['type']==Run+1]
+        Y = FrameData['y'][FrameData['type']==Run+1]
 
-        Xc = FrameData[2,FrameData[1,:]==NumberOfRuns]
-        Yc = FrameData[3,FrameData[1,:]==NumberOfRuns]
+        Xc = FrameData['x'][FrameData['type']==NumberOfRuns]
+        Yc = FrameData['y'][FrameData['type']==NumberOfRuns]
         
         Centers = np.array([np.array(self[c].center) for c in self])
 
