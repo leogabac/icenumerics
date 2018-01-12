@@ -5,6 +5,7 @@ import time
 import os
 import sys
 import shutil # shutil allows us to move files around. This is usefull to organize the resulting input and output files. 
+import copy
 
 class LAMMPSScript():
     def __init__(self,colloidalice,simparameters,test=False):
@@ -263,15 +264,25 @@ class LazyOpenLAMMPSTrj():
                     
                 if 'ITEM: ATOMS' in line:
                     item["location"] = d.tell()
-                    self.T[t] = item
+                    self.T[t] = copy.deepcopy(item)
                 
     def readframe(self,time):
-        Atoms = np.empty([6,int(self.T[time]["atoms"])])
+        Atoms = np.zeros(
+            int(self.T[time]["atoms"]),
+            dtype={
+                'names':['id','type','x','y','z','mu'],
+                'formats':['i8','i8','float32','float32','float32','float32']})
         j=0
         with open(self.Name) as d:
             d.seek(self.T[time]["location"])
             for i in range(0,int(self.T[time]["atoms"])):
                 line = d.readline()
-                Atoms[:,j]=np.array([float(i) for i in line.split(' ') if i!='\n'])
+                linearray = np.array([float(i) for i in line.split(' ') if i!='\n'])
+                Atoms['id'][j] = linearray[0]
+                Atoms['type'][j] = linearray[1]
+                Atoms['x'][j] = linearray[2]
+                Atoms['y'][j] = linearray[3]
+                Atoms['z'][j] = linearray[4]
+                Atoms['mu'][j] = linearray[5]
                 j=j+1;
         return Atoms
