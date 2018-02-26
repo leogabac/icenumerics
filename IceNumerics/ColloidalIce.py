@@ -3,6 +3,7 @@ import numpy as np
 import copy
 from matplotlib import pyplot as plt
 from matplotlib import patches
+import scipy.spatial as spa
 
 from IceNumerics.Vector import Vector
         
@@ -86,10 +87,10 @@ class ColloidInTrap():
         ax1.plot(X,Y,'k')
         ax1.add_patch(patches.Circle(
             (X-DX,Y-DY),radius = W,
-            ec='none', fc='g'))
+            ec='g', fc='none'))
         ax1.add_patch(patches.Circle(
             (X+DX,Y+DY),radius = W,
-            ec='none', fc='y'))
+            ec='y', fc='none'))
         ax1.add_patch(patches.Circle(
             (X+PX,Y+PY), radius = W/3, ec='k', fc = 'none'))
         # print([DX,DY])
@@ -205,6 +206,9 @@ class ColloidalIce(dict):
         
         NumberOfRuns = np.max(FrameData['type']);
         
+        if Run>=NumberOfRuns:
+            raise ValueError("You are asking for a run that doesn't exist")
+            
         FrameDataSort = FrameData[FrameData['id'].argsort()]
 
         X = FrameData['x'][FrameData['type']==Run+1]
@@ -224,3 +228,11 @@ class ColloidalIce(dict):
             if np.sign(dot) != 0:
                 self[key].direction = Vector((np.sign(dot)*self[key].direction))
         return self
+    
+    def CalculateEnergy(self):
+        """ Calculates the sum of the inverse cube of all the inter particle distances.
+        For this it uses the spatial package of scipy which shifts this calculation to a compiled program and it's therefore faster.
+        """
+        colloids = np.array([np.array(self[c].center+self[c].colloid) for c in self])
+        self.energy = sum(spa.distance.pdist(colloids)**(-3))
+        return self.energy
