@@ -231,7 +231,9 @@ class ColloidalIce(dict):
     
     def CalculateEnergy(self):
         """ Calculates the sum of the inverse cube of all the inter particle distances.
-        For this it uses the spatial package of scipy which shifts this calculation to a compiled program and it's therefore faster.
+        For this it uses the spatial package of scipy which shifts this calculation to
+        a compiled program and it's therefore faster.
+        The energy output is given in 1/nm^3
         """
         colloids = np.array([np.array(self[c].center+self[c].colloid) for c in self])
         self.energy = sum(spa.distance.pdist(colloids)**(-3))
