@@ -87,12 +87,13 @@ class ColloidInTrap():
         ax1.plot(X,Y,'k')
         ax1.add_patch(patches.Circle(
             (X-DX,Y-DY),radius = W,
-            ec='g', fc='none'))
+            ec='g', fc='g'))
         ax1.add_patch(patches.Circle(
             (X+DX,Y+DY),radius = W,
-            ec='y', fc='none'))
+            ec='y', fc='y'))
         ax1.add_patch(patches.Circle(
             (X+PX,Y+PY), radius = W/3, ec='k', fc = 'none'))
+        ax1.plot([X,X+PX],[Y,Y+PY],color='k')
         # print([DX,DY])
         
     def flip(self):
@@ -206,10 +207,10 @@ class ColloidalIce(dict):
         
         NumberOfRuns = np.max(FrameData['type']);
         
-        if Run>=NumberOfRuns:
+        if (Run+1)>=NumberOfRuns:
             raise ValueError("You are asking for a run that doesn't exist")
             
-        FrameDataSort = FrameData[FrameData['id'].argsort()]
+        FrameData = FrameData[FrameData['id'].argsort()]
 
         X = FrameData['x'][FrameData['type']==Run+1]
         Y = FrameData['y'][FrameData['type']==Run+1]
