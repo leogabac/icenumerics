@@ -1,11 +1,5 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 from IceNumerics.Spins import *
-from IceNumerics.ColloidalIce import ColloidalIce
+from IceNumerics.ColloidalIce import colloidal_ice
 from IceNumerics.LAMMPSInterface import *
 import subprocess # Subprocess is a default library which allows us to call a command line program from within a python script
 import shutil # shutil allows us to move files around. This is usefull to organize the resulting input and output files. 
@@ -36,7 +30,7 @@ def FindCrossingOfSpinVectors(S1,S2):
         return np.Inf+np.zeros(np.shape(S1['Center']))
 
 def UniquePoints(Points,Tol = 0.1):
-    # This function returns only the distinct points (with a tolerance). 
+    """Returns only the distinct points (with a tolerance)."""
     Distance = sptl.distance.squareform(sptl.distance.pdist(Points))
     IsLast = []
     for i,p in enumerate(Points):
@@ -45,16 +39,16 @@ def UniquePoints(Points,Tol = 0.1):
     return Points[np.array(IsLast),:]
     
 def ColloidsToVector(C):
-    # Extracts an array of centers and directions from a Colloidal Ice System
+    """Extracts an array of centers and directions from a Colloidal Ice System"""
     Vectors = np.array(np.zeros(len(C)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
     i=0
     for c in C:
-        Vectors[i] = (C[c].center[0:2],C[c].direction[0:2])
+        Vectors[i] = (c.center[0:2],c.direction[0:2])
         i=i+1
     return Vectors
         
 def CalculateNeighborPairs(Centers):
-    # This function makes a list of all the Pairs of Delaunay Neighbors from an array of points
+    """This function makes a list of all the Pairs of Delaunay Neighbors from an array of points"""
     
     tri = sptl.Delaunay(Centers)
 
@@ -145,23 +139,13 @@ class Vertices():
                                     
         return self
         
-    def display(self,DspObj = False,DspCoord = False):
+    def display(self,ax = False,DspCoord = False):
 
         d=0.1
         AxesLocation = [d,d,1-2*d,1-2*d]
                 
-        if not DspObj:
-            fig1 = plt.figure(1)
-            ax1 = plt.axes(AxesLocation)
-        elif DspObj.__class__.__name__ == "Figure":
-            fig1 = DspObj
-            ax1 = plt.axes(AxesLocation, frameon=0)
-            fig1.patch.set_visible(False)
-        elif DspObj.__class__.__name__ == "Axes":
-            ax1 = DspObj
-            fig1.patch.set_visible(False)
-        elif DspObj.__class__.__name__ == "AxesSubplot":
-            ax1 = DspObj
+        if not ax:
+            fig1, ax = plt.subplots(1,1)  
 
         if not DspCoord:
             for v in self.array:
@@ -169,7 +153,7 @@ class Vertices():
                     c = 'r'
                 else:
                     c = 'b'
-                ax1.add_patch(patches.Circle(
+                ax.add_patch(patches.Circle(
                     (v['Location'][0],v['Location'][1]),radius = abs(v['Charge'])*2000,
                     ec='none', fc=c))
                 X = v['Location'][0]
@@ -177,21 +161,15 @@ class Vertices():
                 if v['Charge']==0:
                     DX = v['Dipole'][0]*2e-1
                     DY = v['Dipole'][1]*2e-1
-                    ax1.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=7e3,fc='k'))
+                    ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=7e3,fc='k'))
                 
         if DspCoord: 
             for v in self.array:
-                ax1.add_patch(patches.Circle(
+                ax.add_patch(patches.Circle(
                     (v['Location'][0],v['Location'][1]),radius = abs(v['Coordination'])*2000,
                     ec='none', fc=c))
                 X = v['Location'][0]
                 Y = v['Location'][1]
             
         plt.axis("equal")
-
-        if DspObj.__class__.__name__ == "Figure":
-            ax1 = DspObj
-            fig1.patch.set_visible(False) 
-            plt.show(block = True)    
-                
 

@@ -12,15 +12,18 @@ class TrapGeometry():
     # I need to think how to put them together. 
 
     def __init__(self,**kargs):
-        self.trap_sep_ratio = float(1); # The trap sep ratio is the ratio between the spin dipole and the final trap separation.
+        self.trap_sep = 10e3; # The trap sep ratio is the ratio between the spin dipole and the final trap separation.
         self.height = 200;
         self.stiffness = 1.2e-4;
         self.stiffness_spread = 0;
-        if 'TrapSepRatio' in kargs: self.trap_sep_ratio = float(kargs['TrapSepRatio'])
+        self.initial_position = "fixed"
+        if 'trap_sep' in kargs: self.trap_sep = float(kargs['trap_sep'])
         if 'Height' in kargs: self.height = float(kargs['Height'])
         if 'Stiffness' in kargs: self.stiffness = float(kargs['Stiffness'])
         if 'Stiffness_Spread' in kargs:
             self.stiffness_spread = float(kargs['Stiffness_Spread'])
+        if 'InitialPosition' in kargs:
+            self.initial_position = kargs['InitialPosition']
 
 class ColloidParameters():
     # Colloid Parameters are:
@@ -97,28 +100,20 @@ class WorldParameters():
     def set_region(self,ColloidalIce,**kargs):
         if 'Periodic' in kargs: self.periodic = kargs['Periodic']
         if not self.periodic:
+            
+            """
+            The default region is set by taking the extreme values of the colloids
+            """
             self.region = np.array([0,0,0,0,0,0],dtype=np.float64)
-            for c in ColloidalIce:
-                
-                if ColloidalIce[c].center[0]<self.region[0]:
-                    self.region[0]=ColloidalIce[c].center[0]
-                elif ColloidalIce[c].center[0]>self.region[1]:
-                    self.region[1]=ColloidalIce[c].center[0]
-                    
-                if ColloidalIce[c].center[1]<self.region[2]:
-                    self.region[2]=ColloidalIce[c].center[1]
-                elif ColloidalIce[c].center[1]>self.region[3]:
-                    self.region[3]=ColloidalIce[c].center[1]
-                    
-                if ColloidalIce[c].center[2]<self.region[4]:
-                    self.region[4]=ColloidalIce[c].center[2]
-                elif ColloidalIce[c].center[2]>self.region[5]:
-                    self.region[5]=ColloidalIce[c].center[2]
+            
+            colloid = np.array([c.center+c.colloid for c in ColloidalIce])
+            self.region[0::2] = np.min(colloid,0)
+            self.region[1::2] = np.max(colloid,0)
 
         else:
             error('I still don\'t know how to calculate periodic region')
-        self.region += np.array([-1,1,-1,1,-0.05,0.05])*ColloidalIce.lattice
 
+        self.region += np.array([-2,2,-2,2,-0.5,0.5])*1e3
 
 class SimulationParameters():
     def __init__(self,**kargs):
@@ -132,6 +127,7 @@ class SimulationParameters():
         self.filename = "LAMMPSTest"
         self.timestamp = True
         self.targetdir = ''
+        self.dipole_cutoff = 100e3 #nm
         
         if 'Seed' in kargs: self.seed = np.array(kargs['Seed'])
         if 'Timestep' in kargs: self.timestep = kargs['Timestep']
@@ -142,3 +138,4 @@ class SimulationParameters():
         if 'Filename' in kargs: self.filename = kargs['Filename']
         if 'Timestamp' in kargs: self.timestamp = kargs['Timestamp']
         if 'TargetDir' in kargs: self.targetdir = kargs['TargetDir']
+        if 'dipole_cutoff' in kargs: self.dipole_cutoff = kargs['dipole_cutoff']

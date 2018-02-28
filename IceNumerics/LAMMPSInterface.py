@@ -1,11 +1,10 @@
 import random
-from IceNumerics.Spins import Vector
 import numpy as np
 import time
 import os
 import sys
 import shutil # shutil allows us to move files around. This is usefull to organize the resulting input and output files. 
-import copy
+import copy as cp
 
 class LAMMPSScript():
     def __init__(self,colloidalice,simparameters,test=False):
@@ -21,7 +20,7 @@ class LAMMPSScript():
                     
         self.simparameters = simparameters
         
-        ArbitColloid = next(iter(colloidalice.values()))
+        ArbitColloid = colloidalice[0]
 
         self.write_input_file(colloidalice.worldparams,simparameters,ArbitColloid)
         self.write_data_file(colloidalice,simparameters)
@@ -33,7 +32,7 @@ class LAMMPSScript():
         
         runs = SimParameters.runs
 
-        Cutoff = 2e-3*ColloidalIce.lattice
+        Cutoff = 1e-3*SimParameters.dipole_cutoff
  
         f.write("This is the initial atom setup of %s \n"%filename)
         f.write("%d atoms\n"%(len(ColloidalIce)*(SimParameters.runs+1)))
@@ -50,7 +49,7 @@ class LAMMPSScript():
         trapID = 1
         TrapsDirectory = {}
         for c in ColloidalIce:
-            write_trap(f,ColloidalIce[c],trapID,runs+1)
+            write_trap(f,c,trapID,runs+1)
             TrapsDirectory[trapID] = c
             trapID+=1
 
@@ -60,7 +59,7 @@ class LAMMPSScript():
         for run in range(0,runs):
             for t in TrapsDirectory:
                 c = TrapsDirectory[t]
-                write_colloid(f,ColloidalIce[c],
+                write_colloid(f,c,
                               atomID,run+1,ColloidalIce.worldparams,t)
                 AtomID2TrapDirectory[atomID] = t;
                 atomID+=1
@@ -86,15 +85,15 @@ class LAMMPSScript():
             c = TrapsDirectory[AtomID2TrapDirectory[atom]]
             
             weight = \
-                (ColloidalIce[c].colloidparams.volume * \
-                (ColloidalIce[c].colloidparams.rel_density-1) * \
+                (c.colloidparams.volume * \
+                (c.colloidparams.rel_density-1) * \
                 ColloidalIce.worldparams.medium_density * \
                 ColloidalIce.worldparams.gravity)*1e-3
-            trap_sep = ColloidalIce[c].direction.magnitude()*1e-3
-            stiffness = ColloidalIce[c].geometry.stiffness*1000 * weight
+            trap_sep = c.geometry.trap_sep*1e-3
+            stiffness = c.geometry.stiffness*1000 * weight
             stiffnesshill = \
-                (1+random.gauss(0,1)*ColloidalIce[c].geometry.stiffness_spread)* \
-                8/np.power(trap_sep,2)*weight*ColloidalIce[c].geometry.height/1000
+                (1+random.gauss(0,1)*c.geometry.stiffness_spread)* \
+                8/np.power(trap_sep,2)*weight*c.geometry.height/1000
 
             f.write("%d %f %f\n"%(bond_type,stiffness,stiffnesshill))
 
@@ -102,7 +101,6 @@ class LAMMPSScript():
         ## PAIR COEFFICIENT DEFINITIONS
 
         f.write("\nPairIJ Coeffs\n\n")
-        Cutoff = 2e-3*ColloidalIce.lattice
 
         for I in range(0,runs+1):
             for J in range(I,runs+1):
@@ -156,9 +154,9 @@ class LAMMPSScript():
         f.write("variable Tmax atom %e\n" % worldparams.fieldz[1])
         f.write("variable field atom ")
         if worldparams.fieldz[1]!=0:
-            f.write(    "v_Bmax-(abs((v_Bmax/v_Tmax*(time-v_Tmax)))-(v_Bmax/v_Tmax*(time-v_Tmax)))/2\n\n")
+            f.write("v_Bmax-(abs((v_Bmax/v_Tmax*(time-v_Tmax)))-(v_Bmax/v_Tmax*(time-v_Tmax)))/2\n\n")
         else:
-            f.write("v_Bmax")
+            f.write("v_Bmax\n\n")
             
         f.write("fix \t1 Atoms bd %f %f %d\n"%(temp,damp,seed))
         f.write("fix \t2 all enforce2d\n")
@@ -203,23 +201,22 @@ class LAMMPSScript():
 
 def write_trap(File,Colloid,trapID,traps_type):
     
-        trap_sep = Colloid.direction.magnitude()*1e-3
+        trap_sep = Colloid.direction*Colloid.geometry.trap_sep*1e-3
         diameter = Colloid.colloidparams.diameter * 1e-3
         density = Colloid.colloidparams.mass / \
                   Colloid.colloidparams.volume * 1e21
         File.write("%6.0d\t%d\t"%(trapID,traps_type))
         File.write("%5.2f\t%5.2f\t%5.6f\t" %
-                 tuple(Colloid.center * 1e-3+
-                      Vector((0,0,0))))
+                 tuple(Colloid.center * 1e-3))
         File.write("%5.2f\t%5.2g\t"%(diameter,density))
         File.write("0.0\t%5.2g\t%5.2g\t%5.2g\t0.0\t"%
-                tuple(Colloid.direction.unit()*
+                tuple(Colloid.direction*
                        (trap_sep)))
         File.write("%d\n"%trapID)
 
 def write_colloid(File,Colloid,atomID,atom_type,world,trap):
     
-        trap_sep = Colloid.direction.magnitude()*1e-3
+        trap_sep = Colloid.geometry.trap_sep*1e-3
         diameter = Colloid.colloidparams.diameter * 1e-3
         density = Colloid.colloidparams.mass / \
                   Colloid.colloidparams.volume * 1e21
@@ -228,17 +225,14 @@ def write_colloid(File,Colloid,atomID,atom_type,world,trap):
                   # world.permeability)/2.99e8
         moment = 0
         susceptibility = Colloid.colloidparams.susceptibility
-        if Colloid.ordering=="Random": order_flip = random.randrange(-1,2,2)
+        if Colloid.geometry.initial_position=="random": order_flip = random.randrange(-1,2,2)
         else: order_flip = 1;
         
         File.write("%6.0d\t%d\t"%(atomID,atom_type))
         File.write("%5.2f\t%5.2f\t%5.6f\t" %
                 tuple((Colloid.center +
                       Colloid.colloid*order_flip)*1e-3 +
-                      Vector((
-                          0,
-                          0,
-                          random.gauss(0,1)))*0.01
+                      np.array([0,0,random.gauss(0,1)*0.01])
                       ))
         File.write("%f\t%f\t"%(diameter,density))
         File.write("0.0\t0.0\t0.0\t0.0\t%5.5g\t"%susceptibility)
@@ -264,7 +258,7 @@ class LazyOpenLAMMPSTrj():
                     
                 if 'ITEM: ATOMS' in line:
                     item["location"] = d.tell()
-                    self.T[t] = copy.deepcopy(item)
+                    self.T[t] = cp.deepcopy(item)
                 
     def readframe(self,time):
         Atoms = np.zeros(
@@ -278,8 +272,8 @@ class LazyOpenLAMMPSTrj():
             for i in range(0,int(self.T[time]["atoms"])):
                 line = d.readline()
                 linearray = np.array([float(i) for i in line.split(' ') if i!='\n'])
-                Atoms['id'][j] = linearray[0]
-                Atoms['type'][j] = linearray[1]
+                Atoms['id'][j] = int(linearray[0])
+                Atoms['type'][j] = int(linearray[1])
                 Atoms['x'][j] = linearray[2]
                 Atoms['y'][j] = linearray[3]
                 Atoms['z'][j] = linearray[4]
