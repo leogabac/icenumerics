@@ -210,7 +210,7 @@ class colloidal_ice(list):
         The element where_in_frame[i] is the location of the framedata row corresponding to  colloidal_ice[i]
         """
         frame_center_tree = spa.cKDTree(frame_centers)
-        where_in_frame = frame_center_tree.query_ball_point(center/1000,10)
+        where_in_frame = frame_center_tree.query_ball_point(centers/1000,10)
         
         for i,c in enumerate(self): 
             w = where_in_frame[i][0]
