@@ -164,7 +164,7 @@ class colloidal_ice(list):
     def __str__(self):
         
         PrntStr = ""
-        for s in self
+        for s in self:
             PrntStr += \
                 self[s].__str__()
                 
