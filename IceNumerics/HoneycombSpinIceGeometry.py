@@ -1,6 +1,6 @@
 import numpy as np
 import random
-
+import scipy.spatial as spa
 def HoneycombSpinIceDirectionRandomOrdering(Direction):
 
     Direction = np.array([dir*random.randrange(-1,2,2) for dir in Direction])
@@ -35,16 +35,20 @@ def HoneycombSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering):
         DirectionX.flatten(), \
         np.zeros(DirectionX.flatten().shape)]).T
 
-    # This erases repeated spins
-    for i in range(len(Center)):
-        for j in range(i):
-            if np.allclose(Center[i],Center[j],rtol=1e-10):
-                Center[j] = np.NaN
-                Direction[j] = np.NaN
-
-    Center = Center[~np.isnan(Center[:,0]),:]
-    Direction = Direction[~np.isnan(Direction[:,0]),:]
-        
+    """This erases repeated spins"""
+    """
+    For this we find all neighbors within a small tolerance (using cKDTree is fast).
+    We then make an array of all ids to remove by listing only the second member of each neighbor pair.
+    We make a mask with the remove array and apply it to the arrays Center and Direction"""
+    tree = spa.cKDTree(Center)
+    remove = [p[1] for p in tree.query_pairs(1e-10)]
+    
+    mask = np.ones(len(Center),dtype=bool)
+    mask[remove] = False
+    
+    Center = Center[mask]
+    Direction = Direction[mask]
+    
     if Ordering == "Random":
         Direction = HoneycombSpinIceDirectionRandomOrdering(Direction)
 
