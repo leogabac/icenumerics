@@ -1,9 +1,6 @@
-__all__ = ["ColloidalIce",
-           "Spins",
-           "HoneycombSpinIceGeometry",
-           "SquareSpinIceGeometry",
-           "LAMMPSInterface",
-           "Parameters",
-           "ReadColloidalIceSimulation",
-           "Vector",
-           "Vertices"]
+from pint import UnitRegistry
+ureg = UnitRegistry()
+
+from icenumerics.spins import *
+from icenumerics.colloidalice import *
+from icenumerics.vertices import *
