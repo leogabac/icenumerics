@@ -5,8 +5,8 @@ import matplotlib.patches as ptch
 import scipy.spatial as spa
 
 from icenumerics.geometry import *
-from IceNumerics.parameters import *
-from IceNumerics.spins import *
+from icenumerics.parameters import *
+from icenumerics.spins import *
 
 class colloid_in_trap():
     """
