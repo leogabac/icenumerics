@@ -1,6 +1,6 @@
-from IceNumerics.Spins import *
-from IceNumerics.ColloidalIce import colloidal_ice
-from IceNumerics.LAMMPSInterface import *
+from icenumerics.spins import *
+from icenumerics.colloidalice import colloidal_ice
+from icenumerics.lmp import *
 import subprocess # Subprocess is a default library which allows us to call a command line program from within a python script
 import shutil # shutil allows us to move files around. This is usefull to organize the resulting input and output files. 
 import os

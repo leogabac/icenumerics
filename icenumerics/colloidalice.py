@@ -34,32 +34,19 @@ class colloid_in_trap():
         * spread
     """
     def __init__(self, 
-        center = [0,0,0], 
-        direction = [1,0,0], 
-        **kargs):
+        center, direction, particle, trap):
         """ initializes a colloid_in_trap object """
         
-        self.colloidparams = ColloidParameters(**kargs)                
-        if 'ColloidParameters' in kargs:
-            self.colloidparams = kargs['ColloidParameters']
+        self.center = np.array(center)*center.units
         
-        self.geometry = TrapGeometry(**kargs);
-        if 'Geometry' in kargs: self.geometry = kargs['Geometry']
-
-        if 'Ordering' in kargs: self.ordering = kargs['Ordering']
-
-        if center.__class__.__name__=='Vector':
-            self.center = np.array(center)
-   
-        if direction.__class__.__name__=='Vector':
-            self.direction = np.array(direction)
+        # Direction is always unitary
+        self.direction = np.array(direction)/np.linalg.norm(direction.magnitude,2)
         
-        """ Make direction unitary"""
-        self.direction = np.array(self.direction)
-        self.direction = self.direction/np.sqrt(sum(self.direction**2))
-        
+        self.particle = particle
+        self.trap = trap
+                
         """ Colloid position is given by the direction vectors"""
-        self.colloid = self.direction * self.geometry.trap_sep/2
+        self.colloid = self.direction * self.trap.trap_sep/2
         
     def __str__(self):
         """ Prints a string which represents the colloid_in_trap """
@@ -71,14 +58,14 @@ class colloid_in_trap():
         if not ax1:
             fig, ax1 = plt.subplots(1,1)
             
-        X=self.center[0]
-        Y=self.center[1]
+        X=self.center[0].magnitude
+        Y=self.center[1].magnitude
         # D is the vector that goes fom the center to each of the traps
-        DX=self.direction[0]/2*self.geometry.trap_sep
-        DY=self.direction[1]/2*self.geometry.trap_sep
+        DX=self.direction[0]/2*self.trap.trap_sep.to(self.center[0].units).magnitude
+        DY=self.direction[1]/2*self.trap.trap_sep.to(self.center[1].units).magnitude
         # P is the vector that goes from the center to the colloid
-        PX=self.colloid[0]
-        PY=self.colloid[1]
+        PX=self.colloid[0].to(self.center[0].units).magnitude
+        PY=self.colloid[1].to(self.center[1].units).magnitude
         
         #Discriminant = self.colloid.dot(self.direction)
         #Discriminant = Discriminant/abs(Discriminant)
@@ -86,7 +73,7 @@ class colloid_in_trap():
         #DX = DX*Discriminant
         #DY = DY*Discriminant
                 
-        W = self.geometry.stiffness*5e7
+        W = self.trap.stiffness.magnitude*5e4
         
         ax1.plot(X,Y,'k')
         ax1.add_patch(patches.Circle(
@@ -98,7 +85,6 @@ class colloid_in_trap():
         ax1.add_patch(patches.Circle(
             (X+PX,Y+PY), radius = W/3, ec='k', fc = 'none'))
         ax1.plot([X,X+PX],[Y,Y+PY],color='k')
-        ax1.set_aspect("equal")
         
     def flip(self):
         """flips the ColloidInTrap by inverting its direction and its colloid attributes. Returns fliped object"""
@@ -144,41 +130,91 @@ class colloidal_ice(list):
     It also includes some extra parameters contained in the worldparams attribute. 
     It normally takes a spin ice object as input and generates one colloid_in_trap object for each spin
     """
-    def __init__(self,*args,**kargs):
-
-        self.worldparams = WorldParameters(**kargs)
+    def __init__(self,
+    arrangement,particle,trap,
+    height_spread = 0, susceptibility_spread = 0,
+    region = None, periodic = None):
+        """ 
+        The arrangement parameter defines the positions and directions of the colloidal ice. There are two possible inputs:
+            * a `spins` object: in this case the colloidal ice is copied from the spins arrangement. 
+            * a `dict` object: this `dict` object must contain two arrays, `center` and `direction`.
+        `particle` and `trap` are parameter containers created with the `particle` and `trap` generators. They can be a single object, or a list. If it is a list, it must coincide with the number of elements defined by the `arrangement` parameter.
+        """
         
-        for i,s in enumerate(args[0]):
-            """ ordering is a parameter of the SpinIce object. 
-            It is important to pass it here to the colloid parameters because
-            it affects how colloids are setup in the initial configuration"""
-            c = colloid_in_trap(
-                args[0][s].center,
-                args[0][s].direction,
-                InitialPosition = args[0].ordering,**kargs)
+        if arrangement.__class__.__name__ == "spins":
+            centers = [s.center for s in arrangement]
+            directions = [s.direction for s in arrangement]
             
-            self.append(c)
-
-        self.worldparams.set_region(self)
-
-    def __str__(self):
+        else:
+            centers = arrangement['centers']
+            directions = arrangement['directions']
         
-        PrntStr = ""
-        for s in self:
-            PrntStr += \
-                self[s].__str__()
+        if not hasattr(particle,'__getitem__'):
+            particle = [particle for c in centers]
+        if not hasattr(trap,'__getitem__'):
+            trap = [trap for c in centers]
+        
+        height_disorder = np.random.randn(len(trap))*height_spread
+        susceptibility_disorder = np.random.randn(len(trap))*susceptibility_spread
+            
+        for t,p,hdis,sdis in zip(
+                trap,particle,height_disorder,susceptibility_disorder):
+            t.height = t.height*hdis
+            p.susceptibility = p.susceptibility*sdis
+                    
+        self.extend(
+            [colloid_in_trap(c,d,p,t) 
+                for p,t,c,d in zip(particle,trap,centers,directions)])
+
+        if region == None:
+            units = centers[0].units
+            lower_bounds = np.min(
+                np.array([c.to(units).magnitude for c in centers])*units,0)
+            upper_bounds = np.max(
+                np.array([c.to(units).magnitude for c in centers])*units,0)
+            
+            region = np.vstack([lower_bounds,upper_bounds])
+        
+        self.region = region
+        
+        if periodic is None:
+            periodic = False
+            
+        self.periodic = periodic
+        
                 
-        return(PrntStr)
-        
-    def display(self, ax = False):
+    def display(self, ax = None):
                 
         if not ax:
             fig1, ax = plt.subplots(1,1)            
 
         for s in self:
             s.display(ax)
-
-        plt.axis("equal")
+        
+        ax.set_xlim([self.region[0,0],self.region[1,0]])
+        ax.set_ylim([self.region[0,1],self.region[1,1]])
+         
+        ax.set_aspect("equal")
+           
+        #plt.axis("square")
+    
+    def pad_region(self,pad):
+        self.region[0] = self.region[0]-pad
+        self.region[1] = self.region[1]+pad
+        
+    def simulate(self,
+        world,
+        name,
+        targetdir = '',
+        include_timestamp = True,
+        run_time = 60*ureg.s,
+        framerate = 15*ureg.Hz,
+        timestep = 10*ureg.us,
+        ):
+        
+        
+        
+        pass
 
     def framedata_to_colloids(self,frame_data,run):
         """ 

@@ -1,159 +1,87 @@
-import math
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import patches
         
 from icenumerics.geometry import *
-from icenumerics.parameters import * 
+from icenumerics import ureg
 
 class spin():
+    """ 
+    A spin is defined by two vectors in R3 space.
+    The vector center gives the position of the center of the spin
+    The vector direction gives the dipole moment of the spin.
+    """
     
-    ## a Spin is defined by two vectors in R3 space.
-    # the vector center gives the position of the center of the spin
-    # the vector direction gives the dipole moment of the spin.
-    # vectors in R3 space are defined as tuples
-    
-    def __init__(self,center=Vector((0,0,0)),direction=Vector((0,0,0))):
+    def __init__(self,center,direction):
         
-        if center.__class__.__name__=='Vector':
-            self.center = center
-        elif center.__class__.__name__=='tuple':
-            self.center = Vector((center))
-        else:
-            error("Invalid input class for object spin")
-            
-        if direction.__class__.__name__=='Vector':
-            self.direction = direction
-        elif center.__class__.__name__=='tuple':
-            self.direction = Vector((direction))
-        else:
-            error("Invalid input class for object spin")
+        self.center = np.array(center)*center.units
+        self.direction = np.array(direction)*center.units
         
     def __str__(self):
         return("Spin with Center at [%d %d %d] and Direction [%d %d %d]\n" %\
                (tuple(self.center)+tuple(self.direction)))
 
     def display(self,ax1):
-        X=self.center[0]
-        Y=self.center[1]
-        DX=self.direction[0]*0.3
-        DY=self.direction[1]*0.3
-        W = math.sqrt(DX**2+DY**2)
+        
+        X=self.center[0].magnitude
+        Y=self.center[1].magnitude
+        DX=self.direction[0].magnitude*0.3
+        DY=self.direction[1].magnitude*0.3
+        W = np.sqrt(DX**2+DY**2)
         ax1.plot([X],[Y],'b')
         ax1.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=W,fc='b'))
 
-class Spins(dict):  
+class spins(list): 
+    """ `spins` is a very general class that contains a list of spin objects. The only feature of this list is that it is created from the centers and directions of the spins, and also that it contains a ´display´ method. """ 
     
-    def __init__(self,*args):
-        for s in args:
-            if s.center in self:
-                # if this spin is alread y in the system,
-                # then average both directions
-                self[s.center].direction+=s.direction
-                self[s.center].direction*=0.5
-            else:
-                self[s.center] = s
-
-    def __str__(self):
+    def __init__(self, centers = [], directions = None):
+        """To initialize, we can give the centers and directions of the spins contained. However, we can also initialize an empty list, and then populate it using the `extend` method """
         
-        PrntStr = ""
-        for s in self:
-            PrntStr += \
-                self[s].__str__()
-                
-        return(PrntStr)
+        if len(centers)>0:
+            self = self.extend([spin(c,d) for (c,d) in zip(centers,directions)])
         
-    def display(self,DspObj = False):
-
-        d=0.1
-        AxesLocation = [d,d,1-2*d,1-2*d]
-                
-        if not DspObj:
-            fig1 = plt.figure(1)
-            ax1 = plt.axes(AxesLocation)
-        elif DspObj.__class__.__name__ == "Figure":
-            fig1 = DspObj
-            ax1 = plt.axes(AxesLocation, frameon=0)
-            fig1.patch.set_visible(False)
-        elif DspObj.__class__.__name__ == "Axes":
-            ax1 = DspObj
-            fig1.patch.set_visible(False)
-        elif DspObj.__class__.__name__ == "AxesSubplot":
-            ax1 = DspObj
+        
+    def display(self,ax = None, ix = False):
+        """ This displays the spins in a pyplot axis. The ix parameter allows us to obtain the spins index, which is useful to access specific indices."""
+        if not ax:
+            fig1, ax = plt.subplots(1,1)            
 
         for s in self:
-            self[s].display(ax1)
+            s.display(ax)
 
         plt.axis("equal")
 
-        if DspObj.__class__.__name__ == "Figure":
-            ax1 = DspObj
-            fig1.patch.set_visible(False) 
-            plt.show(block = True)
-        
-class SquareSpinIce(Spins):
-    
-    def __init__(self,Sx=1,Sy=1,**kargs):
-        """ SquareSpinIce Takes the following arguments upon definition:
-        Sx (1),
-        Sy (1),
-        --------------
-        Keyword Args:
-        Periodic (False)
-        Lattice (1)
-        Ordering [GroundState,Bias,(Random)]
-        Boundary [(ClosedSpin),ClosedVertex]
+    def create_lattice(self, geometry, size,
+        lattice_constant = 1, border = "closed spin"):
+        """ Creates a lattice of spins. 
+        The geometry can be:
+            * "square"
+            * "honeycomb"
+        The border can be 
+            * "closed spin":
+            * "closed vertex" 
+            * "periodic" 
         """
-
-        # Parse Keyword Arguments
         
-        if 'Lattice' in kargs: self.lattice = kargs['Lattice']
-        else: self.lattice = 1;
+        latticeunits = lattice_constant.units
 
-        if 'Ordering' in kargs: self.ordering = kargs['Ordering']
-        else: self.ordering = 'Random'
-
-        if 'Ratio' in kargs: self.Ratio = kargs['Ratio']
-        else: self.Ratio = 1
+        if geometry == "square":
+            center, direction = square_spin_ice_geometry(
+                size[0], size[1], lattice_constant.magnitude,
+                "Random", Ratio = 1, Boundary = border
+            )
+                    
+        elif geometry == "honeycomb":
+            center, direction = honeycomb_spin_ice_geometry(
+                size[0], size[1], lattice_constant.magnitude,
+                "Random"
+            )
+            
+        else: 
+            raise(ValueError(geometry+" is not a supporteed geometry."))
         
-        if 'Boundary' in kargs: self.Boundary = kargs['Boundary']
-        else: self.Boundary = "ClosedSpin"
-
-        Center,Direction = SquareSpinIceCalculateGeometry(
-            Sx,Sy,self.lattice,self.ordering,self.Ratio,self.Boundary)
-
-        Direction = Direction*self.lattice
-        
-        S = tuple(Spin(tuple(c),tuple(d)) for c, d in zip(Center,Direction))
-        
-        super(SquareSpinIce,self).__init__(*S)
-
-class HoneycombSpinIce(Spins):
-    
-    def __init__(self,Sx=1,Sy=1,**kargs):
-        # HoneycombSpinIce Takes the following arguments upon definition:
-        # Sx (1),
-        # Sy (1),
-        # --------------
-        # Keyword Args:
-        # Periodic (False)
-        # Lattice (1)
-        # Ordering [GroundState,Bias,(Random)]
-
-        # Parse Keyword Arguments
-        
-        if 'Lattice' in kargs: self.lattice = kargs['Lattice']
-        else: self.lattice = 1;
-
-        if 'Ordering' in kargs: self.ordering = kargs['Ordering']
-        else: self.ordering = 'Random'
-
-        Center,Direction = HoneycombSpinIceCalculateGeometry(
-            Sx,Sy,self.lattice,self.ordering)
-
-        Direction = Direction*self.lattice
-        
-        S = tuple(Spin(tuple(c),tuple(d)) for c, d in zip(Center,Direction))
-                
-        super(HoneycombSpinIce,self).__init__(*S)
+        print(latticeunits)
+        self.__init__(center*latticeunits,direction*latticeunits)
+        self.lattice = lattice_constant
+        self.ordering = "random"
 

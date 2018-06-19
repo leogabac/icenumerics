@@ -2,9 +2,9 @@ import numpy as np
 
 def SquareSpinIceConcatenateCenters(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice,Boundary):
     """ Concatenate Vertical and Horizontal spin arrays """
-    if Boundary == "ClosedSpin":
+    if Boundary == "closed spin":
         Delta = 0.5
-    elif Boundary == "ClosedVertex":
+    elif Boundary == "closed vertex":
         Delta = -0.5
 
     return np.vstack(
@@ -72,7 +72,7 @@ def SquareSpinIceDirectionRandomOrdering(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice
 
     return VOrderDirectionArray, HOrderDirectionArray
 
-def SquareSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering,Ratio,Boundary):
+def square_spin_ice_geometry(Sx,Sy,Lattice,Ordering,Ratio,Boundary):
     """ 
     This function calculates the positions and directions of the spins in a square spin ice system. 
     
@@ -85,14 +85,14 @@ def SquareSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering,Ratio,Boundary):
     vsoX = np.arange(0,Sx+1)*Lattice
     vsoY = np.arange(0,Sy+1)*Lattice
     
-    if Boundary == "ClosedSpin":
+    if Boundary == "closed spin":
         VSpinsX, VSpinsY = np.meshgrid(vsoX,vsoY[0:-1])
         HSpinsX, HSpinsY = np.meshgrid(vsoX[0:-1],vsoY)
-    elif Boundary == "ClosedVertex":
+    elif Boundary == "closed vertex":
         VSpinsX, VSpinsY = np.meshgrid(vsoX[0:-1],vsoY)
         HSpinsX, HSpinsY = np.meshgrid(vsoX,vsoY[0:-1])
     else:
-        raise("That Boundary is not in the catalogue")
+        raise(ValueError(Boundary+" is not a valid Boundary specification"))
 
 
     VSpinsX = VSpinsX.flatten(1)[None].T
@@ -119,7 +119,8 @@ def SquareSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering,Ratio,Boundary):
 
     else:
         error("I do not know this ordering")
-
+    
     Direction = SquareSpinIceDirection(VOrderDirectionArray*Ratio,HOrderDirectionArray)
-
+    
+    Direction = Direction*Lattice
     return Center, Direction

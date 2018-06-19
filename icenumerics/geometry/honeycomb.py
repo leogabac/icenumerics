@@ -294,7 +294,7 @@ def HoneycombSpinIceDirectionFerromagnetic(Center,Lattice,Direction):
 
     return Direction
     
-def HoneycombSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering):
+def honeycomb_spin_ice_geometry(Sx,Sy,Lattice,Ordering):
     """This function calculates the positions and directions of the spins in a honeycomb spin ice system. 
 
     These are the arrays to iterate. For now, each point in x-y generates one unit cell which is a hexagon of spins. Then repeated spins are eliminated."""
@@ -328,7 +328,7 @@ def HoneycombSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering):
     """
     For this we find all neighbors within a small tolerance (using cKDTree is fast).
     We then make an array of all ids to remove by listing only the second member of each neighbor pair.
-    We make a mask with the remove array and apply it to the arrays Center and Direction"""
+    We make a mask with the remove array and apply it to the arrays Center and Direction """
     tree = spa.cKDTree(Center)
     remove = [p[1] for p in tree.query_pairs(1e-10)]
     
@@ -354,6 +354,6 @@ def HoneycombSpinIceCalculateGeometry(Sx,Sy,Lattice,Ordering):
     
 #    for c in Center:
 #        c = RoundToN(c,6)
-    
+    Direction = Direction*Lattice
     return Center, Direction
 
