@@ -56,13 +56,12 @@ class world():
     def __init__(self,
             temperature = 300*ureg.K,
             field = 20*ureg.mT,
-            force = np.array([0,0,0])*ureg.pN,
-            dipole_cutoff = 200*ureg.um):
+            dipole_cutoff = 200*ureg.um,
+            enforce2d = True):
         """ The force parameter adds a biasing force to the simulation."""
         
         self.temperature = temperature
         self.kB = (1.38064852e-23*ureg.J/ureg.K).to(ureg.pN*ureg.nm/ureg.K)
-        
+        self.enforce2d = enforce2d
         self.field = field
-        self.force = force
         self.dipole_cutoff = dipole_cutoff

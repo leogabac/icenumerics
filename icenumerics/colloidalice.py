@@ -9,7 +9,7 @@ from icenumerics.geometry import *
 from icenumerics.parameters import *
 from icenumerics.spins import *
 
-import icenumerics.magcolloids.magcolloid as mc
+from icenumerics.magcolloids  import magcolloid as mc
 
 class colloid_in_trap():
     """
@@ -206,15 +206,18 @@ class colloidal_ice(list):
         colloids = [c.colloid.to(ureg.um).magnitude for c in self]*ureg.um
         centers = [c.center.to(ureg.um).magnitude for c in self]*ureg.um
         directions = [c.direction for c in self]
-
-        particles
+        
+        # s = np.shape(np.array(colloids))
+        # initial_randomization = np.random.randn(s[0],s[1])*0.1*ureg.um
+        initial_displacement = np.array([[0,0,0.1]]*len(colloids))*ureg.um
+        
         p_type = np.array(classify_objects(particles))
         t_type = np.array(classify_objects(traps))
 
         for p in np.unique(p_type):
 
             particles = mc.particles(
-                colloids+centers,
+                colloids+centers+initial_displacement,
                 atom_type = 0,
                 atoms_id = np.arange(len(colloids)),
                 radius = self[p].particle.radius,
@@ -243,6 +246,7 @@ class colloidal_ice(list):
             dipole_cutoff = world.dipole_cutoff,
             lj_cutoff = 0,
             lj_parameters = [0*ureg.pg*ureg.um**2/ureg.us**2,0],
+            enforce2d = world.enforce2d,
             gravity = 0*ureg.um/ureg.us**2)
             
         field = mc.field(magnitude = world.field, 

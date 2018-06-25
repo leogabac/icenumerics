@@ -1,6 +1,5 @@
 from icenumerics.spins import *
 from icenumerics.colloidalice import colloidal_ice
-from icenumerics.lmp import *
 import subprocess # Subprocess is a default library which allows us to call a command line program from within a python script
 import shutil # shutil allows us to move files around. This is usefull to organize the resulting input and output files. 
 import os
@@ -162,11 +161,17 @@ class vertices():
                 
         if DspCoord: 
             for v in self.array:
+                if v['Charge']>0:
+                    c = 'r'
+                else:
+                    c = 'b'
+                    
                 ax.add_patch(patches.Circle(
                     (v['Location'][0],v['Location'][1]),radius = abs(v['Coordination'])*2,
                     ec='none', fc=c))
                 X = v['Location'][0]
                 Y = v['Location'][1]
-            
-        plt.axis("equal")
+        
+        #ax.set_aspect("equal")    
+        #plt.axis("equal")
 
