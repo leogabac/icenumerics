@@ -1,0 +1,14 @@
+setup.py
+icenumerics/__init__.py
+icenumerics/colloidalice.py
+icenumerics/parameters.py
+icenumerics/spins.py
+icenumerics/vertices.py
+icenumerics.egg-info/PKG-INFO
+icenumerics.egg-info/SOURCES.txt
+icenumerics.egg-info/dependency_links.txt
+icenumerics.egg-info/requires.txt
+icenumerics.egg-info/top_level.txt
+icenumerics/geometry/__init__.py
+icenumerics/geometry/honeycomb.py
+icenumerics/geometry/square.py

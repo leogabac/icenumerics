@@ -1,0 +1,7 @@
+numpy
+scipy
+pandas
+matplotlib
+pint
+jsonpickle
+magcolloid>=0.3.4

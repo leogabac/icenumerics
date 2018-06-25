@@ -5,7 +5,7 @@ with open("Readme.md","r") as fh:
     
 setuptools.setup(
     name="icenumerics",
-    version="0.1.0",
+    version="0.1.7",
     author="Antonio Ortiz-Ambriz",
     author_email="aortiza@gmail.com",
     description="Simulations of Colloidal Ice",
@@ -13,10 +13,13 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/aortiza/icenumerics",
     packages=setuptools.find_packages(),
-    install_requires = ['numpy','scipy','pandas','matplotlib','ureg','jsonpickle','magcolloids']
+    install_requires = ['numpy','scipy','pandas','matplotlib','pint','jsonpickle','magcolloid>=0.3.4'],
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: Windows, MacOS X(intel), Linux",
+        "Development Status :: 3 - Alpha",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Unix",
     ),
 )
