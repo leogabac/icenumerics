@@ -39,7 +39,7 @@ variable fieldx atom v_Bmag*sin(v_omega*time)*sin(v_theta)
 variable fieldy atom v_Bmag*cos(v_omega*time)*sin(v_theta)
 variable fieldz atom v_Bmag*cos(v_theta)
 
-fix 	1 Atoms bd 300 0.001 970505
+fix 	1 Atoms bd 300 0.001 846958
 
 fix 	2 all enforce2d
 
@@ -122,33 +122,33 @@ Step Atoms
     5800      678 
     5900      678 
     6000      678 
-Loop time of 1.03741 on 1 procs for 6000 steps with 678 atoms
+Loop time of 1.06839 on 1 procs for 6000 steps with 678 atoms
 
-Performance: 4997046104487816.000 ns/day, 0.000 hours/ns, 5783.618 timesteps/s
-99.4% CPU use with 1 MPI tasks x no OpenMP threads
+Performance: 4852175292040706.000 ns/day, 0.000 hours/ns, 5615.944 timesteps/s
+96.5% CPU use with 1 MPI tasks x no OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 0.15595    | 0.15595    | 0.15595    |   0.0 | 15.03
-Bond    | 0.075975   | 0.075975   | 0.075975   |   0.0 |  7.32
-Neigh   | 0.32091    | 0.32091    | 0.32091    |   0.0 | 30.93
-Comm    | 0.0029979  | 0.0029979  | 0.0029979  |   0.0 |  0.29
-Output  | 0.06893    | 0.06893    | 0.06893    |   0.0 |  6.64
-Modify  | 0.40666    | 0.40666    | 0.40666    |   0.0 | 39.20
-Other   |            | 0.005987   |            |       |  0.58
+Pair    | 0.1518     | 0.1518     | 0.1518     |   0.0 | 14.21
+Bond    | 0.087003   | 0.087003   | 0.087003   |   0.0 |  8.14
+Neigh   | 0.35083    | 0.35083    | 0.35083    |   0.0 | 32.84
+Comm    | 0.0019989  | 0.0019989  | 0.0019989  |   0.0 |  0.19
+Output  | 0.074945   | 0.074945   | 0.074945   |   0.0 |  7.01
+Modify  | 0.39078    | 0.39078    | 0.39078    |   0.0 | 36.58
+Other   |            | 0.01104    |            |       |  1.03
 
 Nlocal:    678 ave 678 max 678 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Nghost:    0 ave 0 max 0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Neighs:    615 ave 615 max 615 min
+Neighs:    631 ave 631 max 631 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 615
-Ave neighs/atom = 0.90708
+Total # of neighbors = 631
+Ave neighs/atom = 0.930678
 Ave special neighs/atom = 1
-Neighbor list builds = 546
-Dangerous builds = 528
+Neighbor list builds = 567
+Dangerous builds = 548
                     
 Total wall time: 0:00:01
