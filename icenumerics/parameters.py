@@ -31,13 +31,15 @@ class particle():
         """
         Initializes a particle type. 
         The diffusion coefficient can be given instead o the drag.
-        In that case, the temperature is also needed to calculate the drag. 
+        In that case, the temperature is also needed to calculatelm the drag. 
         This represents the density mismatch of the particle in the solvent
         """
         
         if diffusion:
             
-            KbT = 4*(ureg.pN*ureg.nm)/(300*ureg.K)*temperature
+            kB = (1.38064852e-23*ureg.J/ureg.K).to(ureg.pN*ureg.nm/ureg.K)
+            
+            KbT = kB*temperature
             drag = KbT/diffusion
             
         self.radius = radius.to(ureg.um)
@@ -50,20 +52,13 @@ class particle():
         self.drag_mass = (drag*damp).to(ureg.pg)
         
 class world():
-    # World Parameters contains:
-    # Region [in nm]: Default is calculated by set_region(ColloidalIce)
-    # Periodic 
-    # Temperature [K]
-    # Kb [pN nm / K]
-    # FieldZ
-    # Bias
     
     def __init__(self,
-        temperature = 300*ureg.K,
-        field = 20*ureg.mT,
-        force = np.array([0,0,0])*ureg.pN,
-        dipole_cutoff = 200*ureg.um
-        ):
+            temperature = 300*ureg.K,
+            field = 20*ureg.mT,
+            force = np.array([0,0,0])*ureg.pN,
+            dipole_cutoff = 200*ureg.um):
+        """ The force parameter adds a biasing force to the simulation."""
         
         self.temperature = temperature
         self.kB = (1.38064852e-23*ureg.J/ureg.K).to(ureg.pN*ureg.nm/ureg.K)

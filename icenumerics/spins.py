@@ -80,7 +80,6 @@ class spins(list):
         else: 
             raise(ValueError(geometry+" is not a supporteed geometry."))
         
-        print(latticeunits)
         self.__init__(center*latticeunits,direction*latticeunits)
         self.lattice = lattice_constant
         self.ordering = "random"

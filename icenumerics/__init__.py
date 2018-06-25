@@ -1,5 +1,10 @@
 from pint import UnitRegistry
-ureg = UnitRegistry()
+
+import sys
+
+from .magcolloids import magcolloid as mc
+
+ureg = mc.ureg
 
 from icenumerics.spins import *
 from icenumerics.colloidalice import *

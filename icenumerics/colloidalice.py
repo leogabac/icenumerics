@@ -3,10 +3,13 @@ import copy as cp
 import matplotlib.pyplot as plt
 import matplotlib.patches as ptch
 import scipy.spatial as spa
+import pandas as pd
 
 from icenumerics.geometry import *
 from icenumerics.parameters import *
 from icenumerics.spins import *
+
+import icenumerics.magcolloids.magcolloid as mc
 
 class colloid_in_trap():
     """
@@ -51,7 +54,7 @@ class colloid_in_trap():
     def __str__(self):
         """ Prints a string which represents the colloid_in_trap """
         return("Colloid is in [%d %d %d], trap is [%d %d %d %d %d %d]\n" %\
-               (tuple(self.colloid)+tuple(self.center)+tuple(self.direction)))
+               (tuple(self.colloid.magnitude)+tuple(self.center.magnitude)+tuple(self.direction)))
                
     def display(self, ax1=False):
         """ Draws a figure with the trap and the colloid inside it"""
@@ -73,7 +76,7 @@ class colloid_in_trap():
         #DX = DX*Discriminant
         #DY = DY*Discriminant
                 
-        W = self.trap.stiffness.magnitude*5e4
+        W = (1/self.trap.stiffness.magnitude)*4e-3
         
         ax1.plot(X,Y,'k')
         ax1.add_patch(patches.Circle(
@@ -84,7 +87,7 @@ class colloid_in_trap():
             ec='y', fc='y'))
         ax1.add_patch(patches.Circle(
             (X+PX,Y+PY), radius = W/3, ec='k', fc = 'none'))
-        ax1.plot([X,X+PX],[Y,Y+PY],color='k')
+        #ax1.plot([X,X+PX],[Y,Y+PY],color='k')
         
     def flip(self):
         """flips the ColloidInTrap by inverting its direction and its colloid attributes. Returns fliped object"""
@@ -98,10 +101,7 @@ class colloid_in_trap():
         """ 
         Flips the ColloidInTrap to make it point in the direction of vector (dot(colloid,vector)>0). Returns fliped object        
         """
-        if not (vector.__class__.__name__=="ndarray" \
-            or vector.__class__.__name__=="list" \
-            or vector.__class__.__name__=="tuple"):
-                raise ValueError("The vector argument must be either a Vector, ndarray, list or tuple")
+
         # if vector is 2D, append zero
         if len(vector)==2:
             if vector.__class__.__name__=="tuple":
@@ -115,13 +115,8 @@ class colloid_in_trap():
         
         cp = copy.deepcopy(self);
 
-        # Flip if when direction is opposite to bias
-        if vector.__class__.__name__=="ndarray":
-            if vector.dot(self.direction)<0:
-                cp = self.flip()
-        elif vector.__class__.__name__=="list" or vector.__class__.__name__=="tuple":
-            if np.array(vector).dot(self.direction)<0:
-                cp = self.flip()
+        if np.array(vector).dot(self.direction)<0:
+            cp = self.flip()
         return cp
         
 class colloidal_ice(list):
@@ -154,13 +149,8 @@ class colloidal_ice(list):
         if not hasattr(trap,'__getitem__'):
             trap = [trap for c in centers]
         
-        height_disorder = np.random.randn(len(trap))*height_spread
-        susceptibility_disorder = np.random.randn(len(trap))*susceptibility_spread
-            
-        for t,p,hdis,sdis in zip(
-                trap,particle,height_disorder,susceptibility_disorder):
-            t.height = t.height*hdis
-            p.susceptibility = p.susceptibility*sdis
+        self.height_spread=height_spread
+        self.susceptibility_spread = susceptibility_spread
                     
         self.extend(
             [colloid_in_trap(c,d,p,t) 
@@ -173,7 +163,7 @@ class colloidal_ice(list):
             upper_bounds = np.max(
                 np.array([c.to(units).magnitude for c in centers])*units,0)
             
-            region = np.vstack([lower_bounds,upper_bounds])
+            region = np.vstack([lower_bounds,upper_bounds])*units
         
         self.region = region
         
@@ -191,8 +181,8 @@ class colloidal_ice(list):
         for s in self:
             s.display(ax)
         
-        ax.set_xlim([self.region[0,0],self.region[1,0]])
-        ax.set_ylim([self.region[0,1],self.region[1,1]])
+        ax.set_xlim([self.region[0,0].magnitude,self.region[1,0].magnitude])
+        ax.set_ylim([self.region[0,1].magnitude,self.region[1,1].magnitude])
          
         ax.set_aspect("equal")
            
@@ -202,59 +192,84 @@ class colloidal_ice(list):
         self.region[0] = self.region[0]-pad
         self.region[1] = self.region[1]+pad
         
-    def simulate(self,
-        world,
-        name,
+    def simulate(self, world, name,
         targetdir = '',
         include_timestamp = True,
         run_time = 60*ureg.s,
         framerate = 15*ureg.Hz,
-        timestep = 10*ureg.us,
-        ):
+        timestep = 100*ureg.us,
+        output = ["x","y","z"]):
         
-        
-        
-        pass
+        particles = [c.particle for c in self]
+        traps = [c.trap for c in self]
 
-    def framedata_to_colloids(self,frame_data,run):
-        """ 
-        Converts frame_data to a colloidal_ice object
-        frame_data is a structured numpy array with the data from a single frame of a 
-        colloidal ice simulation. This data 
-        """
-        number_of_runs = np.max(frame_data['type']);
+        colloids = [c.colloid.to(ureg.um).magnitude for c in self]*ureg.um
+        centers = [c.center.to(ureg.um).magnitude for c in self]*ureg.um
+        directions = [c.direction for c in self]
 
-        if (run+1)>=number_of_runs:
-            raise ValueError("You are asking for a run that doesn't exist")
-        
-        """ Think about this part. 
-            Trusting the order imposed by the LAMMPS sim sounds like it could be improved """
-        frame_data.sort(0)
-        X = frame_data['x'][frame_data['type']==run+1]
-        Y = frame_data['y'][frame_data['type']==run+1]
-        Z = frame_data['z'][frame_data['type']==run+1]
+        particles
+        p_type = np.array(classify_objects(particles))
+        t_type = np.array(classify_objects(traps))
 
-        Xc = frame_data['x'][frame_data['type']==number_of_runs]
-        Yc = frame_data['y'][frame_data['type']==number_of_runs]
-        Zc = frame_data['z'][frame_data['type']==number_of_runs]
-        
-        frame_centers = np.vstack([Xc.flatten(),Yc.flatten(),Zc.flatten()]).transpose()
-        centers = np.array([np.array(c.center) for c in self])
-        
-        """ 
-        This part finds the index of the frame_center array that corresponds to a place in the centers array
-        The element where_in_frame[i] is the location of the framedata row corresponding to  colloidal_ice[i]
-        """
-        frame_center_tree = spa.cKDTree(frame_centers)
-        where_in_frame = frame_center_tree.query_ball_point(centers/1000,10)
-        
-        for i,c in enumerate(self): 
-            w = where_in_frame[i][0]
-            c.colloid = np.array([X[w]-Xc[w],Y[w]-Yc[w],Z[w]-Zc[w]])*1000
-            """ Ensure c.direction points to the colloid"""
-            c.direction = c.direction*np.sign(np.sum(c.colloid*c.direction))
+        for p in np.unique(p_type):
+
+            particles = mc.particles(
+                colloids+centers,
+                atom_type = 0,
+                atoms_id = np.arange(len(colloids)),
+                radius = self[p].particle.radius,
+                susceptibility = self[p].particle.susceptibility,
+                drag = self[p].particle.drag)
+
+        for t in np.unique(t_type):
+
+            traps = mc.bistable_trap(
+                centers,
+                directions,
+                particles,
+                atom_type = 1, 
+                trap_id = np.arange(len(centers))+len(colloids),
+                distance = self[t].trap.trap_sep,
+                height = self[t].trap.height,
+                stiffness = self[t].trap.stiffness,
+                height_spread = self.height_spread
+                )
+                
+        world_sim = mc.world(
+            particles,traps,
+            region=self.region.transpose().flatten(),
+            walls=[False,False,False],
+            temperature = world.temperature,
+            dipole_cutoff = world.dipole_cutoff,
+            lj_cutoff = 0,
+            lj_parameters = [0*ureg.pg*ureg.um**2/ureg.us**2,0],
+            gravity = 0*ureg.um/ureg.us**2)
             
-        return self
+        field = mc.field(magnitude = world.field, 
+            frequency = 0*ureg.Hz, angle = 0*ureg.degrees)
+        
+        self.sim = mc.sim(
+            file_name = name, dir_name = targetdir, stamp_time = include_timestamp,
+            timestep = timestep,
+            framerate = framerate,
+            total_time = run_time,
+            output = output,
+            particles = particles, traps = traps, world = world_sim, field = field)
+        
+        self.sim.generate_scripts()
+        self.sim.run()
+        
+        self.trj = self.sim.load(read_trj = True)
+        self.frames = self.trj.index.get_level_values("frame").unique()
+        self.set_state_from_frame(frame = -1)
+        
+    def set_state_from_frame(self, frame):
+        
+        idx = pd.IndexSlice
+        frame = self.frames[frame]
+        for i,c in enumerate(self):
+            c.colloid = self.trj.loc[idx[frame,i+1],["x","y","z"]].values*ureg.um - c.center
+            c.direction = c.direction * np.sign(np.dot(c.colloid,c.direction))
     
     def calculate_energy(self):
         """ Calculates the sum of the inverse cube of all the inter particle distances.
@@ -265,3 +280,25 @@ class colloidal_ice(list):
         colloids = np.array([np.array(c.center+c.colloid) for c in self])
         self.energy = sum(spa.distance.pdist(colloids)**(-3))
         return self.energy
+        
+def classify_objects(object_list):
+    """ Classifies objects by uniqueness. Returns a list with an object type directory."""
+    o_type = -1
+
+    def where(obj,obj_list):
+        """returns the first occurence of `particle` in the array `particles`"""
+        for i,o in enumerate(obj_list):
+            if o==obj:
+                return i
+
+    type_dict = []
+
+    for i,o in enumerate(object_list):
+        loc = where(o,object_list[0:i])
+        if loc is not None:
+            type_dict.append(o_type)
+        else:
+            o_type = o_type+1
+            type_dict.append(o_type)
+    
+    return type_dict

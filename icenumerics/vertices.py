@@ -12,7 +12,7 @@ import matplotlib
 import scipy.spatial as sptl
 import pandas as pd
 
-def FindCrossingOfSpinVectors(S1,S2):
+def spin_crossing_point(S1,S2):
     # This works well in 2d. In 3d it's triciker
     if not (S1['Direction']==S2['Direction']).all():
         A = np.ones([2,2])
@@ -29,7 +29,7 @@ def FindCrossingOfSpinVectors(S1,S2):
     else:
         return np.Inf+np.zeros(np.shape(S1['Center']))
 
-def UniquePoints(Points,Tol = 0.1):
+def unique_points(Points,Tol = 0.1):
     """Returns only the distinct points (with a tolerance)."""
     Distance = sptl.distance.squareform(sptl.distance.pdist(Points))
     IsLast = []
@@ -38,7 +38,7 @@ def UniquePoints(Points,Tol = 0.1):
         
     return Points[np.array(IsLast),:]
     
-def ColloidsToVector(C):
+def colloidal_ice_vector(C):
     """Extracts an array of centers and directions from a Colloidal Ice System"""
     Vectors = np.array(np.zeros(len(C)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
     i=0
@@ -47,7 +47,7 @@ def ColloidsToVector(C):
         i=i+1
     return Vectors
         
-def CalculateNeighborPairs(Centers):
+def calculate_neighbor_pairs(Centers):
     """This function makes a list of all the Pairs of Delaunay Neighbors from an array of points"""
     
     tri = sptl.Delaunay(Centers)
@@ -66,21 +66,21 @@ def CalculateNeighborPairs(Centers):
 
     return NeighborPairs
 
-def FromNeigbhorsGetNearestNeighbors(NeighborPairs):
+def from_neighbors_get_nearest_neighbors(NeighborPairs):
     # This function takes a list of Delaunay Neighbor Pairs and returns only those which are close to the minimum distance.
     NeighborPairs['Distance']=np.around(NeighborPairs['Distance'],decimals=4)
     NeighborPairs = NeighborPairs[NeighborPairs['Distance']<=np.min(NeighborPairs['Distance'])*1.1]
     
     return NeighborPairs
 
-def GetVerticesPositions(NeighborPairs,Spins):
+def get_vertices_positions(NeighborPairs,spins):
     # From a list of Spins, get neighboring spins, and get the crossing point of each, which defines a vertex.  
     for i,n in enumerate(NeighborPairs):
-        NeighborPairs[i]['Vertex'] = FindCrossingOfSpinVectors(Spins[n['Pair'][0]],Spins[n['Pair'][1]])[0:2]
+        NeighborPairs[i]['Vertex'] = spin_crossing_point(spins[n['Pair'][0]],spins[n['Pair'][1]])[0:2]
     
     return NeighborPairs
 
-class Vertices():
+class vertices():
     def __init__(self):
         # This function initializes the Vertices Array
         self.array=np.array([],
@@ -91,20 +91,20 @@ class Vertices():
                           ('Charge',int),
                           ('Dipole',int,(2,))])
         
-    def ColloidsToVertices(self,C):
+    def colloids_to_vertices(self,C):
 
-        self.Spins = ColloidsToVector(C)
+        self.spins = colloidal_ice_vector(C)
         
-        NeighborPairs = CalculateNeighborPairs(self.Spins['Center'])
+        NeighborPairs = calculate_neighbor_pairs(self.spins['Center'])
 
-        NeighborPairs = FromNeigbhorsGetNearestNeighbors(NeighborPairs)
+        NeighborPairs = from_neighbors_get_nearest_neighbors(NeighborPairs)
 
-        NeighborPairs = GetVerticesPositions(NeighborPairs,self.Spins)
+        NeighborPairs = get_vertices_positions(NeighborPairs,self.spins)
         
-        V = UniquePoints(NeighborPairs['Vertex'])
+        v = unique_points(NeighborPairs['Vertex'])
         
         ## Make Vertex array
-        self.array=np.array(np.empty(np.shape(V)[0]),
+        self.array=np.array(np.empty(np.shape(v)[0]),
                             dtype=[
                                 ('Location', float,(2,)),
                                 ('id',int),
@@ -112,37 +112,34 @@ class Vertices():
                                 ('Charge',int),
                                 ('Dipole',int,(2,))])
         
-        self.array['Location'] = V
+        self.array['Location'] = v
         
         ## Make Neighbors directory
-        self.Neighbors = {}
+        self.neighbors = {}
 
-        for i,V in enumerate(self.array):
-            V['id']=i
-            self.Neighbors[i] = []
-            for N in NeighborPairs:
-                if sptl.distance.euclidean(N['Vertex'],V['Location'])<np.mean(N['Vertex']*1e-6):
-                    self.Neighbors[i]=self.Neighbors[i]+list(N['Pair'])
-            self.Neighbors[i] = set(self.Neighbors[i])
+        for i,v in enumerate(self.array):
+            v['id']=i
+            self.neighbors[i] = []
+            for n in NeighborPairs:
+                if sptl.distance.euclidean(n['Vertex'],v['Location'])<np.mean(n['Vertex']*1e-6):
+                    self.neighbors[i]=self.neighbors[i]+list(n['Pair'])
+            self.neighbors[i] = set(self.neighbors[i])
             
             ## Calculate Coordination
-            V['Coordination'] = len(self.Neighbors[i])
+            v['Coordination'] = len(self.neighbors[i])
         
             ## Calculate Charge and Dipole
-            V['Charge'] = 0
-            V['Dipole'] = [0,0]
+            v['Charge'] = 0
+            v['Dipole'] = [0,0]
                
-            for n in self.Neighbors[V['id']]:
-                V['Charge']=V['Charge'] + np.sign(np.sum((V['Location']-self.Spins[n]['Center'])*self.Spins[n]['Direction']))
+            for n in self.neighbors[v['id']]:
+                v['Charge']=v['Charge'] + np.sign(np.sum((v['Location']-self.spins[n]['Center'])*self.spins[n]['Direction']))
 
-                V['Dipole']=V['Dipole'] + self.Spins[n]['Direction']
-                                    
+                v['Dipole']=v['Dipole'] + self.spins[n]['Direction']
+         
         return self
         
     def display(self,ax = False,DspCoord = False):
-
-        d=0.1
-        AxesLocation = [d,d,1-2*d,1-2*d]
                 
         if not ax:
             fig1, ax = plt.subplots(1,1)  
@@ -154,19 +151,19 @@ class Vertices():
                 else:
                     c = 'b'
                 ax.add_patch(patches.Circle(
-                    (v['Location'][0],v['Location'][1]),radius = abs(v['Charge'])*2000,
+                    (v['Location'][0],v['Location'][1]),radius = abs(v['Charge'])*2,
                     ec='none', fc=c))
                 X = v['Location'][0]
                 Y = v['Location'][1]
                 if v['Charge']==0:
-                    DX = v['Dipole'][0]*2e-1
-                    DY = v['Dipole'][1]*2e-1
-                    ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=7e3,fc='k'))
+                    DX = v['Dipole'][0]
+                    DY = v['Dipole'][1]
+                    ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=5,fc='k'))
                 
         if DspCoord: 
             for v in self.array:
                 ax.add_patch(patches.Circle(
-                    (v['Location'][0],v['Location'][1]),radius = abs(v['Coordination'])*2000,
+                    (v['Location'][0],v['Location'][1]),radius = abs(v['Coordination'])*2,
                     ec='none', fc=c))
                 X = v['Location'][0]
                 Y = v['Location'][1]
