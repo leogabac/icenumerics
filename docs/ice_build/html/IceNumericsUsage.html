@@ -1,0 +1,1141 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Usage instructions for the icenumerics simulation package &#8212; icenumerics v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput,
+div.nbinput div.prompt,
+div.nbinput div.input_area,
+div.nbinput div[class*=highlight],
+div.nbinput div[class*=highlight] pre,
+div.nboutput,
+div.nbinput div.prompt,
+div.nbinput div.output_area,
+div.nboutput div[class*=highlight],
+div.nboutput div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput,
+div.nboutput {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput,
+    div.nboutput {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput div.prompt pre {
+    color: #303F9F;
+}
+
+/* output prompt */
+div.nboutput div.prompt pre {
+    color: #D84315;
+}
+
+/* all prompts */
+div.nbinput div.prompt,
+div.nboutput div.prompt {
+    min-width: 8ex;
+    padding-top: 0.4em;
+    padding-right: 0.4em;
+    text-align: right;
+    flex: 0;
+}
+@media (max-width: 540px) {
+    div.nbinput div.prompt,
+    div.nboutput div.prompt {
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput div.prompt.empty {
+        padding: 0;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput div.prompt pre,
+div.nboutput div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput div.input_area,
+div.nboutput div.output_area {
+    padding: 0.4em;
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput div.input_area,
+    div.nboutput div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput div.input_area {
+    border: 1px solid #cfcfcf;
+    border-radius: 2px;
+    background: #f7f7f7;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.pngmath center alignment in output cells */
+div.nboutput div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+</style>
+<div class="section" id="Usage-instructions-for-the-icenumerics-simulation-package">
+<h1>Usage instructions for the <code class="docutils literal notranslate"><span class="pre">icenumerics</span></code> simulation package<a class="headerlink" href="#Usage-instructions-for-the-icenumerics-simulation-package" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">icenumerics</span></code> package is a collection of classes and routines
+intended to facilitate the simulations of colloidal ice. The actual
+simulation is done by <a class="reference external" href="http://lammps.sandia.gov">LAMMPS</a>, using a
+Brownian dynamics modification found in
+<a class="reference external" href="https://github.com/anyuzx/Lammps_brownian">Lammps_brownian</a>, as
+well as some custom modifications. For the complete lammps source,
+please clone the fork of lammps found
+<a class="reference external" href="https://github.com/aortiza/lammps">here</a>.</p>
+<p>This package works by defining a colloidal ice system, creating LAMMPS
+input scripts, running them through a <code class="docutils literal notranslate"><span class="pre">os.system</span></code> command, and then
+reading the result from the <code class="docutils literal notranslate"><span class="pre">.lammpstrj</span></code> file. One advantage of this
+approach is that the output files can be read at a later time even after
+the workspace has been reset.</p>
+<p>It goes without saying that this is a very early development program and
+should not be expected to do many more things than what are shown here.
+However, if you have a suggestion for further functionality, you can
+raise an <a class="reference external" href="https://github.com/aortiza/icenumerics/issues">issue</a>. And
+if you want to contribute, you can fork your copy of the package, and
+then do a pull request.</p>
+<div class="section" id="Importing-the-package">
+<h2>Importing the package<a class="headerlink" href="#Importing-the-package" title="Permalink to this headline">¶</a></h2>
+<p>The package is easily imported by writing</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">icenumerics</span> <span class="k">as</span> <span class="nn">ice</span>
+</pre></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># This only adds the package to the path.</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">icenumerics</span> <span class="k">as</span> <span class="nn">ice</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="About-units.">
+<h2>About units.<a class="headerlink" href="#About-units." title="Permalink to this headline">¶</a></h2>
+<p>The dimensions of the package are managed using the package <code class="docutils literal notranslate"><span class="pre">pint</span></code>.
+This pacakge defines a registry that contains many common units. These
+units can be assigned to a quantity by multiplication. For example,
+suppose we want to calculate the magnetic dipole moment of a particle.
+We have the expression:</p>
+<div class="math notranslate">
+\[{\bf m} = \frac{V\chi{\bf B}}{\mu_0}\]</div>
+<p>and the parameters are, * <span class="math notranslate">\({\bf B} = 30 \mathrm{mT}\ \hat{z}\)</span> *
+<span class="math notranslate">\(r = 5\mu{m}\)</span> * <span class="math notranslate">\(\chi = 0.5\)</span></p>
+<p>and <span class="math notranslate">\(\mu_0 = 4\pi\times10^{-7} \mathrm{H}m^{-1}\)</span></p>
+<p>Then we can write:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pint</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">ureg</span> <span class="o">=</span> <span class="n">pint</span><span class="o">.</span><span class="n">UnitRegistry</span><span class="p">()</span>
+
+<span class="n">B</span> <span class="o">=</span> <span class="mi">30</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">mT</span>
+<span class="n">r</span> <span class="o">=</span> <span class="mi">5</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span>
+<span class="n">chi</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">mu0</span> <span class="o">=</span> <span class="mf">4e-7</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">H</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">m</span>
+
+<span class="n">V</span> <span class="o">=</span> <span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">r</span><span class="o">**</span><span class="mi">3</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">V</span><span class="o">*</span><span class="n">B</span><span class="o">*</span><span class="n">chi</span><span class="o">/</span><span class="n">mu0</span>
+<span class="n">m</span><span class="o">.</span><span class="n">to_base_units</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+6.2499999999999994e-12 ampere meter<sup>2</sup></div>
+</div>
+<p>Which, as we can see, handles well the units for us.</p>
+<div class="section" id="Importing-the-unit-registry">
+<h3>Importing the unit registry<a class="headerlink" href="#Importing-the-unit-registry" title="Permalink to this headline">¶</a></h3>
+<p>One caveat of using <code class="docutils literal notranslate"><span class="pre">pint</span></code> for unit management is that units from one
+unit registry can’t operate with units from another unit registry.
+Therefore, for quantities defined in this script to be able to operate
+with quantities defined inside the <code class="docutils literal notranslate"><span class="pre">icenumerics</span></code> module, we need to
+use the unit registry of the module. This is easily done by writing:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ureg</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">ureg</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="The-Spin-Ice-object">
+<h2>The Spin Ice object<a class="headerlink" href="#The-Spin-Ice-object" title="Permalink to this headline">¶</a></h2>
+<p>The first step towards a simulation is to construct a spin ice object.
+The spin ice will work as a template for the geometry of the colloidal
+ice later.</p>
+<p>To construct a spin ice object, we can write:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sp</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">spins</span><span class="p">()</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">create_lattice</span><span class="p">(</span><span class="s2">&quot;square&quot;</span><span class="p">,[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span><span class="n">lattice_constant</span><span class="o">=</span><span class="mi">30</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Next we can call the display function to see the graphic representation
+of the Spin Ice Object. The argument to the function is the axis object
+in which the figure will be plotted</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_12_0.png" src="_images/IceNumericsUsage_12_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="The-Colloidal-Ice-object">
+<h2>The Colloidal Ice object<a class="headerlink" href="#The-Colloidal-Ice-object" title="Permalink to this headline">¶</a></h2>
+<p>From the spins object, we can construct a <code class="docutils literal notranslate"><span class="pre">colloidal_ice</span></code> object. To
+do this, we need to define some template particles and traps. These two
+objects will be copied to each spin in the spin ice object. This is all
+a way of keeping parameters tidy.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">particle</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">particle</span><span class="p">(</span><span class="n">radius</span> <span class="o">=</span> <span class="mf">5.15</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">,</span>
+             <span class="n">susceptibility</span> <span class="o">=</span> <span class="mf">0.0576</span><span class="p">,</span>
+             <span class="n">diffusion</span> <span class="o">=</span> <span class="mf">0.125</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+             <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+             <span class="n">density</span> <span class="o">=</span> <span class="mi">1000</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">trap</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">trap</span><span class="p">(</span><span class="n">trap_sep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">,</span>
+               <span class="n">height</span> <span class="o">=</span> <span class="mi">80</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">pN</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span>
+               <span class="n">stiffness</span> <span class="o">=</span> <span class="mf">6e-4</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">pN</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span>
+
+<span class="n">col</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">colloidal_ice</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">particle</span><span class="p">,</span> <span class="n">trap</span><span class="p">,</span> <span class="n">height_spread</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">susceptibility_spread</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">pad_region</span><span class="p">(</span><span class="mi">30</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_16_0.png" src="_images/IceNumericsUsage_16_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Running-a-simulation">
+<h2>Running a simulation<a class="headerlink" href="#Running-a-simulation" title="Permalink to this headline">¶</a></h2>
+<p>Before running a simulation, we need to create a set of world
+parameters. This contains things like the field to be applied and the
+temperature.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">world</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">world</span><span class="p">(</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">mT</span><span class="p">,</span>
+    <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+    <span class="n">dipole_cutoff</span> <span class="o">=</span> <span class="mi">200</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>To run the simulation, we use the method <code class="docutils literal notranslate"><span class="pre">simulate</span></code>. If you look at
+the terminal in which this notebook is running, you should see a LAMMPS
+output. This is the indicator that everything went well.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">col</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">world</span><span class="p">,</span>
+             <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+             <span class="n">include_timestamp</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+             <span class="n">targetdir</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;C:\Users\aortiza\Desktop&quot;</span><span class="p">,</span>
+             <span class="n">framerate</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+             <span class="n">timestep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+             <span class="n">run_time</span> <span class="o">=</span> <span class="mi">60</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+             <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<p>When the simulation is finished, it automatically reads the output file
+and updates the system to it’s last position. Therefore, we can see the
+result by simply displaying again the <code class="docutils literal notranslate"><span class="pre">colloidal_ice</span></code> object</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_22_0.png" src="_images/IceNumericsUsage_22_0.png" />
+</div>
+</div>
+<p>To access the system state at a different time in the simulation, we can
+use the method <code class="docutils literal notranslate"><span class="pre">set_state_from_frame(frame)</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span><span class="n">ax2</span><span class="p">,</span><span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_24_0.png" src="_images/IceNumericsUsage_24_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Simulation-trajectories">
+<h2>Simulation trajectories<a class="headerlink" href="#Simulation-trajectories" title="Permalink to this headline">¶</a></h2>
+<p>However, we might want to access the full trajectory of the particles.
+This is stored as a multiindex <code class="docutils literal notranslate"><span class="pre">pandas</span></code> array in the <code class="docutils literal notranslate"><span class="pre">trj</span></code>
+attribute. To access it, we can simply write</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">col</span><span class="o">.</span><span class="n">trj</span>
+</pre></div>
+</div>
+<p>Below we use the method <code class="docutils literal notranslate"><span class="pre">head()</span></code>, which prints only the first few rows
+of a pandas array. This is useful to visualize the structure of an
+array.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>type</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>t</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th>id</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="5" valign="top">0</th>
+      <th>1</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>20.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>40.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>70.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>100.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>130.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</div>
+<div class="section" id="The-multiindex-pandas-array">
+<h2>The multiindex pandas array<a class="headerlink" href="#The-multiindex-pandas-array" title="Permalink to this headline">¶</a></h2>
+<p>The multiindex structure is a little complicated to access at first, but
+it allows a lot of flexibility when slicing sections of the array. It is
+also the natural structure for a system of many particles and many
+frames. Here we show how to easily slice sections of the array.</p>
+<p>The first step is to define an IndexSlice object from the pandas module.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">IndexSlice</span>
+</pre></div>
+</div>
+</div>
+<p>Then, if for example we want to access the tenth frame we write:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">10</span><span class="p">,:],:]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>type</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>t</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th>id</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="5" valign="top">10</th>
+      <th>1</th>
+      <td>1</td>
+      <td>-0.241730</td>
+      <td>20.063200</td>
+      <td>0.479598</td>
+      <td>10.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>-0.327396</td>
+      <td>39.960098</td>
+      <td>0.216390</td>
+      <td>10.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>-0.526896</td>
+      <td>69.891701</td>
+      <td>-2.097540</td>
+      <td>10.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>-0.263524</td>
+      <td>99.824501</td>
+      <td>0.096943</td>
+      <td>10.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1</td>
+      <td>-0.621903</td>
+      <td>129.945007</td>
+      <td>1.040400</td>
+      <td>10.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>and we can plot the points by writing:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">10</span><span class="p">,:],</span><span class="s2">&quot;x&quot;</span><span class="p">],</span><span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">10</span><span class="p">,:],</span><span class="s2">&quot;y&quot;</span><span class="p">],</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;square&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_33_0.png" src="_images/IceNumericsUsage_33_0.png" />
+</div>
+</div>
+<div class="section" id="The-type-column">
+<h3>The type column<a class="headerlink" href="#The-type-column" title="Permalink to this headline">¶</a></h3>
+<p>The simulation program defines traps as a type of atom. Therefore, in
+the resulting array, we see two atoms per <code class="docutils literal notranslate"><span class="pre">colloidal_ice</span></code> element,
+which are distinguished by their <code class="docutils literal notranslate"><span class="pre">type</span></code>, as can be seen in the
+previous image. To access only the atoms, we can use the nice logical
+indexing features of the pandas array.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">trj_particle</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="p">[</span><span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="o">.</span><span class="n">type</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">trj_particle</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>type</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>t</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th>id</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="5" valign="top">0</th>
+      <th>1</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>20.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>40.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>70.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>100.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1</td>
+      <td>0.0</td>
+      <td>130.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>And we can plot the points by writing, as before:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trj_particle</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">10</span><span class="p">,:],</span><span class="s2">&quot;x&quot;</span><span class="p">],</span><span class="n">trj_particle</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">10</span><span class="p">,:],</span><span class="s2">&quot;y&quot;</span><span class="p">],</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;square&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_37_0.png" src="_images/IceNumericsUsage_37_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Drawing-whole-trajectories">
+<h3>Drawing whole trajectories<a class="headerlink" href="#Drawing-whole-trajectories" title="Permalink to this headline">¶</a></h3>
+<p>We can plot the trajectories of the particles by writing:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">trj_particle</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trj_particle</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">[:,</span><span class="n">i</span><span class="p">],</span><span class="s2">&quot;x&quot;</span><span class="p">],</span><span class="n">trj_particle</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">[:,</span><span class="n">i</span><span class="p">],</span><span class="s2">&quot;y&quot;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;square&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_39_0.png" src="_images/IceNumericsUsage_39_0.png" />
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="Counting-vertices">
+<h2>Counting vertices<a class="headerlink" href="#Counting-vertices" title="Permalink to this headline">¶</a></h2>
+<p>Often we are interested in the vertex statistics of the colloidal ice
+system. The package provides some counting methods bundled in the
+<code class="docutils literal notranslate"><span class="pre">vertices</span></code> object.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">v</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">vertices</span><span class="p">()</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We can display both objects on the same axis to see where specific
+vertex types are located. Vertex types are defined by their charge, and
+when they have neutral charge, by the sum of their elements.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_43_0.png" src="_images/IceNumericsUsage_43_0.png" />
+</div>
+</div>
+<p>Note here that the vertices are counted from the system state. If we
+want the vertices at different moments in time, we have to reset the
+system state to that frame.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span><span class="n">ax2</span><span class="p">,</span><span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax3</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_45_0.png" src="_images/IceNumericsUsage_45_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Honeycomb-Spin-Ice">
+<h2>Honeycomb Spin Ice<a class="headerlink" href="#Honeycomb-Spin-Ice" title="Permalink to this headline">¶</a></h2>
+<p>We will try the exact same procedure with a Honeycomb configuration to
+ensure everything works</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sp</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">spins</span><span class="p">()</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">create_lattice</span><span class="p">(</span><span class="s2">&quot;honeycomb&quot;</span><span class="p">,[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span><span class="n">lattice_constant</span><span class="o">=</span><span class="mi">35</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+
+<span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_48_0.png" src="_images/IceNumericsUsage_48_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">particle</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">particle</span><span class="p">(</span><span class="n">radius</span> <span class="o">=</span> <span class="mf">5.15</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">,</span>
+             <span class="n">susceptibility</span> <span class="o">=</span> <span class="mf">0.0576</span><span class="p">,</span>
+             <span class="n">diffusion</span> <span class="o">=</span> <span class="mf">0.125</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+             <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+             <span class="n">density</span> <span class="o">=</span> <span class="mi">1000</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">trap</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">trap</span><span class="p">(</span><span class="n">trap_sep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">,</span>
+               <span class="n">height</span> <span class="o">=</span> <span class="mi">80</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">pN</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span>
+               <span class="n">stiffness</span> <span class="o">=</span> <span class="mf">6e-4</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">pN</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span>
+
+<span class="n">col</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">colloidal_ice</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">particle</span><span class="p">,</span> <span class="n">trap</span><span class="p">,</span> <span class="n">height_spread</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">susceptibility_spread</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">pad_region</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+
+<span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_49_0.png" src="_images/IceNumericsUsage_49_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">world</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">world</span><span class="p">(</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">mT</span><span class="p">,</span>
+    <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+    <span class="n">dipole_cutoff</span> <span class="o">=</span> <span class="mi">20</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">world</span><span class="p">,</span>
+             <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+             <span class="n">include_timestamp</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+             <span class="n">targetdir</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;C:\Users\aortiza\Desktop&quot;</span><span class="p">,</span>
+             <span class="n">framerate</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+             <span class="n">timestep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+             <span class="n">run_time</span> <span class="o">=</span> <span class="mi">60</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+             <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">v</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">vertices</span><span class="p">()</span>
+<span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span><span class="n">ax2</span><span class="p">,</span><span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">set_state_from_frame</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax3</span><span class="p">)</span>
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/IceNumericsUsage_51_0.png" src="_images/IceNumericsUsage_51_0.png" />
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Usage instructions for the <code class="docutils literal notranslate"><span class="pre">icenumerics</span></code> simulation package</a><ul>
+<li><a class="reference internal" href="#Importing-the-package">Importing the package</a></li>
+<li><a class="reference internal" href="#About-units.">About units.</a><ul>
+<li><a class="reference internal" href="#Importing-the-unit-registry">Importing the unit registry</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#The-Spin-Ice-object">The Spin Ice object</a></li>
+<li><a class="reference internal" href="#The-Colloidal-Ice-object">The Colloidal Ice object</a></li>
+<li><a class="reference internal" href="#Running-a-simulation">Running a simulation</a></li>
+<li><a class="reference internal" href="#Simulation-trajectories">Simulation trajectories</a></li>
+<li><a class="reference internal" href="#The-multiindex-pandas-array">The multiindex pandas array</a><ul>
+<li><a class="reference internal" href="#The-type-column">The type column</a></li>
+<li><a class="reference internal" href="#Drawing-whole-trajectories">Drawing whole trajectories</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Counting-vertices">Counting vertices</a></li>
+<li><a class="reference internal" href="#Honeycomb-Spin-Ice">Honeycomb Spin Ice</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/IceNumericsUsage.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Antonio Ortiz-Ambriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/IceNumericsUsage.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

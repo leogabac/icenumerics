@@ -4,7 +4,7 @@ This is a numerics library for simulations and data processing of colloidal ice.
 
 ## Getting Started
 
-You can see a walktrhough here.
+You can see a walktrhough [here](https://github.com/aortiza/IceNumerics/blob/cleanup/IceNumericsUsage.ipynb).
 
 ### Prerequisites
 You will need numpy 1.11.3, scipy 0.18.1 and matplotlib 2.0.0. Many things are built to use Jupyter. You might be able to do them in matplotlib, but I haven't tested it. 
@@ -21,7 +21,7 @@ I don't know. Contact me probably.
 
 ## Authors
 
-* **Antonio Ortiz** 
+* **Antonio Ortiz-Ambriz** 
 
 ## License
 
