@@ -10,5 +10,7 @@ Welcome to icenumerics's documentation!
    :maxdepth: 2
    :caption: Contents:
    
-   instalation
+   installation
    IceNumericsUsage
+   Units
+   Pandas
