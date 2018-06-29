@@ -24,5 +24,8 @@ To clone the latest version from github write::
 	git clone --recurse-submodules https://github.com/aortiza/icenumerics.git
 
 This will download both the icenumerics package and the magcolloids subpackage. 
+Now you can either manualy place the package somewhere that python can find it, or you can use the setup.py scripts. To use the scripts you first need to install the magcolloids package. Go to the magcolloids directory ('\icenumerics\icenumerics\magcolloids\') and run 
 	
+	python setup.py install
 	
+This will install the magcolloids package. Then go out to the icenumerics directory and run the same command. Test the installation as described above. 
