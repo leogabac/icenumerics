@@ -45,6 +45,15 @@ def colloidal_ice_vector(C):
         Vectors[i] = (c.center[0:2],c.direction[0:2])
         i=i+1
     return Vectors
+    
+def spin_ice_vector(S):
+    """Extracts an array of centers and directions from a Spin Ice System"""
+    Vectors = np.array(np.zeros(len(S)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
+    i=0
+    for s in S:
+        Vectors[i] = (s.center[0:2],s.direction[0:2])
+        i=i+1
+    return Vectors
         
 def calculate_neighbor_pairs(Centers):
     """This function makes a list of all the Pairs of Delaunay Neighbors from an array of points"""
@@ -93,6 +102,54 @@ class vertices():
     def colloids_to_vertices(self,C):
 
         self.spins = colloidal_ice_vector(C)
+        
+        NeighborPairs = calculate_neighbor_pairs(self.spins['Center'])
+
+        NeighborPairs = from_neighbors_get_nearest_neighbors(NeighborPairs)
+
+        NeighborPairs = get_vertices_positions(NeighborPairs,self.spins)
+        
+        v = unique_points(NeighborPairs['Vertex'])
+        
+        ## Make Vertex array
+        self.array=np.array(np.empty(np.shape(v)[0]),
+                            dtype=[
+                                ('Location', float,(2,)),
+                                ('id',int),
+                                ('Coordination',int),
+                                ('Charge',int),
+                                ('Dipole',int,(2,))])
+        
+        self.array['Location'] = v
+        
+        ## Make Neighbors directory
+        self.neighbors = {}
+
+        for i,v in enumerate(self.array):
+            v['id']=i
+            self.neighbors[i] = []
+            for n in NeighborPairs:
+                if sptl.distance.euclidean(n['Vertex'],v['Location'])<np.mean(n['Vertex']*1e-6):
+                    self.neighbors[i]=self.neighbors[i]+list(n['Pair'])
+            self.neighbors[i] = set(self.neighbors[i])
+            
+            ## Calculate Coordination
+            v['Coordination'] = len(self.neighbors[i])
+        
+            ## Calculate Charge and Dipole
+            v['Charge'] = 0
+            v['Dipole'] = [0,0]
+               
+            for n in self.neighbors[v['id']]:
+                v['Charge']=v['Charge'] + np.sign(np.sum((v['Location']-self.spins[n]['Center'])*self.spins[n]['Direction']))
+
+                v['Dipole']=v['Dipole'] + self.spins[n]['Direction']
+         
+        return self
+        
+    def spins_to_vertices(self,sp):
+
+        self.spins = spin_ice_vector(sp)
         
         NeighborPairs = calculate_neighbor_pairs(self.spins['Center'])
 
