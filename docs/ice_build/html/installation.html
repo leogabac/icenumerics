@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Installation &#8212; icenumerics v0.1 documentation</title>
+    <title>Installation &#8212; icenumerics v0.1.8 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -45,8 +45,12 @@
 <p>If you get an error, it means that your system can’t run the lammps binaries included in the simulation.</p>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
-<p class="last">write specific instructions lammps compilation and how to include the binaries on the package.</p>
+<p class="last">write specific instructions for lammps compilation and how to include the binaries on the package.</p>
 </div>
+</div>
+<div class="section" id="installing-in-a-conda-virtual-environment">
+<h2>Installing in a conda virtual environment.<a class="headerlink" href="#installing-in-a-conda-virtual-environment" title="Permalink to this headline">¶</a></h2>
+<p>Conda’s virtual environments allow us to install the package in an isolated version of the python installation, in order to prevent conflicts. Since there is no conda installer for icenumerics, to install it in a virtual environment, first create it, install pip within it, and then install icenumerics. The pip installer knows to install packages to the environment itself was installed in.</p>
 </div>
 <div class="section" id="installing-the-latest-version-from-github">
 <h2>Installing the latest version from github.<a class="headerlink" href="#installing-the-latest-version-from-github" title="Permalink to this headline">¶</a></h2>
@@ -72,6 +76,7 @@ Now you can either manualy place the package somewhere that python can find it, 
   <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
 <li><a class="reference internal" href="#installing-a-released-version-using-pip">Installing a released version using pip.</a></li>
+<li><a class="reference internal" href="#installing-in-a-conda-virtual-environment">Installing in a conda virtual environment.</a></li>
 <li><a class="reference internal" href="#installing-the-latest-version-from-github">Installing the latest version from github.</a></li>
 </ul>
 </li>

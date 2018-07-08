@@ -14,7 +14,11 @@ If this works, then you should run a sample simulation, as described in the  :do
 
 If you get an error, it means that your system can't run the lammps binaries included in the simulation.
 
-.. todo:: write specific instructions lammps compilation and how to include the binaries on the package.
+.. todo:: write specific instructions for lammps compilation and how to include the binaries on the package.
+
+Installing in a conda virtual environment.
+==========================================
+Conda's virtual environments allow us to install the package in an isolated version of the python installation, in order to prevent conflicts. Since there is no conda installer for icenumerics, to install it in a virtual environment, first create it, install pip within it, and then install icenumerics. The pip installer knows to install packages to the environment itself was installed in. 
 
 Installing the latest version from github.
 ==========================================

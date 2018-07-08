@@ -27,7 +27,7 @@ author = 'Antonio Ortiz-Ambriz'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v0.1'
+release = 'v0.1.8'
 
 
 # -- General configuration ---------------------------------------------------
@@ -49,7 +49,6 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinxcontrib.programoutput',
     'nbsphinx'
 ]
 
