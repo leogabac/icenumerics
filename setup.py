@@ -5,7 +5,7 @@ with open("Readme.md","r") as fh:
     
 setuptools.setup(
     name="icenumerics",
-    version="0.1.8",
+    version="0.1.9",
     author="Antonio Ortiz-Ambriz",
     author_email="aortiza@gmail.com",
     description="Simulations of Colloidal Ice",

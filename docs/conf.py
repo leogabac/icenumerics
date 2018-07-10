@@ -27,7 +27,7 @@ author = 'Antonio Ortiz-Ambriz'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v0.1.8'
+release = 'v0.1.9'
 
 
 # -- General configuration ---------------------------------------------------

@@ -33,3 +33,8 @@ Now you can either manualy place the package somewhere that python can find it, 
 	python setup.py install
 	
 This will install the magcolloids package. Then go out to the icenumerics directory and run the same command. Test the installation as described above. 
+
+Install from github using pip
+=================================================
+
+pip install git+git://github.com/aortiza/icenumerics@master
