@@ -1,45 +1,38 @@
 import numpy as np
 import random
 import scipy.spatial as spa
-    
-def honeycomb_spin_ice_geometry(Sx,Sy,lattice,border):
+
+def triangular_spin_ice_geometry(Sx,Sy,lattice,border):
     """This function calculates the positions and directions of the spins in a honeycomb spin ice system. 
 
     These are the arrays to iterate. For now, each point in x-y generates one unit cell which is a hexagon of spins. Then repeated spins are eliminated."""
-        
+    """ 
+    Include here an explanation of each of the ordering options"""
+    
     x = np.arange(0,Sx)
     y = np.arange(0,Sy)
     
-    
     if border == "closed spin":
-        t = np.arange(0,2*np.pi,np.pi/3)
-        unit_cell = np.array([
-            np.cos(t),
-            np.sin(t),
-            -np.sin(t)/np.tan(np.pi/3),
-            np.cos(t)/np.tan(np.pi/3)])
+        t = np.array([60,120,240,300])/180*np.pi
+        unit_cell = np.array(
+            [1+np.append(0,np.cos(t)),
+            2*np.sin(np.pi/3)+np.append(0,np.sin(t)),
+            np.append(1,-np.cos(t)),
+            np.append(0,np.sin(t))
+            ])
     elif border == "closed vertex":
-        t = np.arange(0,2*np.pi,2*np.pi/3);
+        t = np.arange(0,2*np.pi,np.pi/3);
         unit_cell = np.array([
-            np.sin(t)/np.tan(np.pi/3),
-            np.cos(t)/np.tan(np.pi/3),
-            np.sin(t)/np.tan(np.pi/3),
-            np.cos(t)/np.tan(np.pi/3)])
-            
-        t = (np.array([60,120,240,300]))/180*np.pi
-        unit_cell = np.array([
-            np.append([0],np.cos(t-np.pi/3)),
-            np.append([0],np.sin(t-np.pi/3)),
-            np.append([np.sin(np.pi/3)],np.sin(t+np.pi/3))/np.tan(np.pi/3),
-            np.append([np.cos(np.pi/3)],np.cos(t+np.pi/3))/np.tan(np.pi/3)
+            np.cos(t),np.sin(t),np.cos(t),np.sin(t)
             ])
     elif border == "periodic":
-        t = np.arange(np.pi,2*np.pi,np.pi/3)
-        unit_cell = np.array([
-            1+np.cos(t),
-            2/np.tan(np.pi/3)+np.sin(t),
-            -np.sin(t)/np.tan(np.pi/3),
-            np.cos(t)/np.tan(np.pi/3)])
+        t = np.array([60,120])/180*np.pi
+        unit_cell = np.array(
+            [1+np.append(0,np.cos(t)),
+            np.append(0,np.sin(t)),
+            np.append(1,-np.cos(t)),
+            np.append(0,np.sin(t))
+            ])
     else: 
         raise(ValueError(border+" is not a supporteed border type."))
         
@@ -65,13 +58,11 @@ def honeycomb_spin_ice_geometry(Sx,Sy,lattice,border):
     mask = np.ones(len(centers),dtype=bool)
     mask[remove] = False
     
-    centers = centers[mask]
-    directions = directions[mask]
-    
     if border == "periodic":
         centers[:,0] = np.mod(centers[:,0],Sx)
-        
-    centers = centers*lattice
-    directions = directions*lattice
+    
+    centers = centers[mask]*lattice
+    directions = directions[mask]*lattice
+
     return centers, directions
 

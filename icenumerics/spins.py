@@ -29,6 +29,7 @@ class spin():
         DY=self.direction[1].magnitude*0.3
         W = np.sqrt(DX**2+DY**2)
         ax1.plot([X],[Y],'b')
+        #ax1.plot([X-DX,X+DX],[Y-DY,Y+DY],'-+')
         ax1.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=W,fc='b'))
 
 class spins(list): 
@@ -74,7 +75,12 @@ class spins(list):
         elif geometry == "honeycomb":
             center, direction = honeycomb_spin_ice_geometry(
                 size[0], size[1], lattice_constant.magnitude,
-                "Random"
+                border = border
+            )
+        elif geometry == "triangular":
+            center, direction = triangular_spin_ice_geometry(
+                size[0], size[1], lattice_constant.magnitude,
+                border = border 
             )
             
         else: 
@@ -84,3 +90,16 @@ class spins(list):
         self.lattice = lattice_constant
         self.ordering = "random"
 
+    def order_spins(self, ordering):
+        """ Modifies de directions of the spins according to a protocol. 
+        The protocol can be either a function f(centers,lattice) or one of the following strings.
+        * "random"
+        * "honeycomb_spin_solid" spin solid phase of the honeycomb spin ice
+        * "square_ground_state"
+        """
+    
+    units = lattice_constant.units
+    
+    centers = np.array([s.center.to(units).magnitude for s in self])*units
+    
+    directions = directions*np.array(ordering(centers,lattice))
