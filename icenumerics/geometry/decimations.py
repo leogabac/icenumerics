@@ -1,8 +1,8 @@
 import numpy as np
 import random
-import scipy.spatial as spa
 import copy as cp 
 from . import *
+import scipy.spatial as spa 
 
 def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
     
@@ -11,25 +11,31 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
     centers = centers/lattice
     directions = directions/lattice
     
-    def ismember_tol(point,point_list,tol = 1e-5):
-        """Determines if point is in the list point_list, within a tolerance tol"""
-        for p in point_list:
-            if np.all(np.isclose(p,point,atol=tol)):
-                return True
-        return False
+    def intersect_with_tol(A,B,tol=1e-5):
+        """ 
+        Intersects two arrays within a tolerance. 
+        Returns a logic array of size len(A), which indicates which points in A are present in B 
+        """
+        A_tree = spa.KDTree(A)
+        B_tree = spa.KDTree(B)
+
+        A_points_in_B = B_tree.query_ball_tree(A_tree,tol)
+        A_points_in_B = [item for sublist in A_points_in_B for item in sublist]
+
+        is_in_B = np.array([False]*len(centers))
+        is_in_B[A_points_in_B] = True
         
+        return is_in_B
+    
     def sublattice_to_keep(centers):
     
         size = np.max(centers,0)-np.min(centers,0)
         lattice_size = [np.ceil(size[1]),np.ceil(size[0])]
     
-#        sp_hex = ice.spins()
-#        sp_hex.create_lattice("honeycomb",lattice_size,lattice_constant=1*ureg.um,border = "closed spin")
         centers_hex,dir_hex = honeycomb_spin_ice_geometry(
             lattice_size[0],lattice_size[1],
             1*units,border="closed spin"
             )
- #       centers_hex = np.array([s.center/sp_hex.lattice for s in sp_hex])
         centers_hex = centers_hex/units
         centers_hex = centers_hex[:,::-1]*np.tan(np.pi/3)+[1,0.5*np.tan(np.pi/3)]
     
@@ -59,10 +65,10 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
 
         vertex_sub_a, vertex_sub_b = vertex_direction_sublattices(centers)
 
-        sublattice_a = [ismember_tol(c_tri,vertex_sub_a) for c_tri in centers]
-        sublattice_b = [ismember_tol(c_tri,vertex_sub_b) for c_tri in centers]
+        sublattice_a = intersect_with_tol(centers,vertex_sub_a)
+        sublattice_b = intersect_with_tol(centers,vertex_sub_b)
 
-        angles = np.mod(np.arctan2(directions[:,1],directions[:,0]),np.pi)/(np.pi)*3
+        angles = np.round(np.mod(np.arctan2(directions[:,1],directions[:,0]),np.pi)/(np.pi)*3)
 
         angles[sublattice_b] = np.mod(3-angles[sublattice_b]*2,6)
         angles[sublattice_a] = np.mod(-angles[sublattice_a]*2,6)
@@ -70,9 +76,9 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
         return angles
 
     keep_sublattice = sublattice_to_keep(centers)
-    decimate = [not ismember_tol(c_tri,keep_sublattice) for c_tri in centers]
+    decimate = intersect_with_tol(centers,keep_sublattice)==False
+
     angles = angle_array(centers,directions)
-    angles[decimate] = np.NaN
-    print(angles)
+    angles[np.array(decimate)==False] = np.NaN
     
-    return [a not in decimate_angles for a in angles]
+    return [a not in np.mod(decimate_angles,6) for a in angles]
