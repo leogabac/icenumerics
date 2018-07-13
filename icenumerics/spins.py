@@ -63,6 +63,7 @@ class spins(list):
             * "closed vertex" 
             * "periodic" 
         """
+        self.clear()
         
         latticeunits = lattice_constant.units
 
@@ -88,18 +89,35 @@ class spins(list):
         
         self.__init__(center*latticeunits,direction*latticeunits)
         self.lattice = lattice_constant
-        self.ordering = "random"
 
     def order_spins(self, ordering):
-        """ Modifies de directions of the spins according to a protocol. 
-        The protocol can be either a function f(centers,lattice) or one of the following strings.
-        * "random"
-        * "honeycomb_spin_solid" spin solid phase of the honeycomb spin ice
-        * "square_ground_state"
+        """ Modifies de directions of the spins according to a function f(centers,directions,lattice)
+        * The function f(centers,directions,lattice) must return an array A of the same length as `directions`, containing logic values where an element `A[i] = True` means the direction of spins[i] is reversed
         """
     
-    units = lattice_constant.units
+        units = self.lattice.units
     
-    centers = np.array([s.center.to(units).magnitude for s in self])*units
+        centers = np.array([s.center.to(units).magnitude for s in self])*units
+        directions = np.array([s.direction.to(units).magnitude for s in self])*units
+        
+        ordering_array = ordering(centers,directions,self.lattice)
+        
+        for i,s in enumerate(self):
+            if ordering_array[i]:
+                s.direction = -s.direction
+                
+    def decimate(self, decimation_fun):
+        
+        units = self.lattice.units
     
-    directions = directions*np.array(ordering(centers,lattice))
+        centers = np.array([s.center.to(units).magnitude for s in self])*units
+        directions = np.array([s.direction.to(units).magnitude for s in self])*units
+        
+        decimation_array = decimation_fun(centers,directions,self.lattice)
+        
+        self.clear()
+        
+        self = self.extend(
+        [spin(c,d) for (c,d) in
+             zip(centers[decimation_array],directions[decimation_array])])
+        
