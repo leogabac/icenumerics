@@ -17,21 +17,30 @@ def triangular_spin_ice_geometry(Sx,Sy,lattice,border):
         unit_cell = np.array(
             [1+np.append(0,np.cos(t)),
             2*np.sin(np.pi/3)+np.append(0,np.sin(t)),
+            np.zeros(len(t)+1),
             np.append(1,-np.cos(t)),
-            np.append(0,np.sin(t))
+            np.append(0,np.sin(t)),
+            np.zeros(len(t)+1)
             ])
     elif border == "closed vertex":
         t = np.arange(0,2*np.pi,np.pi/3);
         unit_cell = np.array([
-            np.cos(t),np.sin(t),np.cos(t),np.sin(t)
+            np.cos(t),
+            np.sin(t),
+            np.zeros(len(t)),
+            np.cos(t),
+            np.sin(t),
+            np.zeros(len(t))
             ])
     elif border == "periodic":
         t = np.array([60,120])/180*np.pi
         unit_cell = np.array(
             [1+np.append(0,np.cos(t)),
             np.append(0,np.sin(t)),
+            np.zeros(len(t)+1),
             np.append(1,-np.cos(t)),
-            np.append(0,np.sin(t))
+            np.append(0,np.sin(t)),
+            np.zeros(len(t)+1)
             ])
     else: 
         raise(ValueError(border+" is not a supporteed border type."))
@@ -41,11 +50,15 @@ def triangular_spin_ice_geometry(Sx,Sy,lattice,border):
 
     centers = np.array([
         (lattice_X+1/2*unit_cell[0,:].reshape(len(unit_cell[0,:]),1)).flatten(),
-        (lattice_Y+1/2*unit_cell[1,:].reshape(len(unit_cell[0,:]),1)).flatten()]).transpose()
+        (lattice_Y+1/2*unit_cell[1,:].reshape(len(unit_cell[0,:]),1)).flatten(),
+        (0*lattice_Y+unit_cell[2,:].reshape(len(unit_cell[0,:]),1)).flatten()
+        ]).transpose()
 
     directions = np.array([
-        (0*lattice_X+1*unit_cell[2,:].reshape(len(unit_cell[0,:]),1)).flatten(),
-        (0*lattice_Y+1*unit_cell[3,:].reshape(len(unit_cell[0,:]),1)).flatten()]).transpose()
+        (0*lattice_X+1*unit_cell[3,:].reshape(len(unit_cell[0,:]),1)).flatten(),
+        (0*lattice_Y+1*unit_cell[4,:].reshape(len(unit_cell[0,:]),1)).flatten(),
+        (0*lattice_Y+0*unit_cell[5,:].reshape(len(unit_cell[0,:]),1)).flatten()
+        ]).transpose()
 
     """This erases repeated spins"""
     """
