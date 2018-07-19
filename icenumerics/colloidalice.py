@@ -2,8 +2,10 @@ import numpy as np
 import copy as cp
 import matplotlib.pyplot as plt
 import matplotlib.patches as ptch
+import matplotlib.animation as anm
 import scipy.spatial as spa
 import pandas as pd
+
 
 from icenumerics.geometry import *
 from icenumerics.parameters import *
@@ -56,39 +58,60 @@ class colloid_in_trap():
         return("Colloid is in [%d %d %d], trap is [%d %d %d %d %d %d]\n" %\
                (tuple(self.colloid.magnitude)+tuple(self.center.magnitude)+tuple(self.direction)))
                
-    def display(self, ax1=False):
+    def display(self, ax1=False, units = None):
         """ Draws a figure with the trap and the colloid inside it"""
         if not ax1:
             fig, ax1 = plt.subplots(1,1)
             
-        X=self.center[0].magnitude
-        Y=self.center[1].magnitude
-        # D is the vector that goes fom the center to each of the traps
-        DX=self.direction[0]/2*self.trap.trap_sep.to(self.center[0].units).magnitude
-        DY=self.direction[1]/2*self.trap.trap_sep.to(self.center[1].units).magnitude
-        # P is the vector that goes from the center to the colloid
-        PX=self.colloid[0].to(self.center[0].units).magnitude
-        PY=self.colloid[1].to(self.center[1].units).magnitude
+        patches = self.create_patch(units = units)
         
-        #Discriminant = self.colloid.dot(self.direction)
-        #Discriminant = Discriminant/abs(Discriminant)
-        
-        #DX = DX*Discriminant
-        #DY = DY*Discriminant
-                
-        W = (1/self.trap.stiffness.magnitude)*4e-3
-        
-        ax1.plot(X,Y,'k')
-        ax1.add_patch(patches.Circle(
-            (X-DX,Y-DY),radius = W,
-            ec='g', fc='g'))
-        ax1.add_patch(patches.Circle(
-            (X+DX,Y+DY),radius = W,
-            ec='y', fc='y'))
-        ax1.add_patch(patches.Circle(
-            (X+PX,Y+PY), radius = W/3, ec='k', fc = 'none'))
+        #ax1.plot(X,Y,'k')
+        ax1.add_patch(patches[0])
+        ax1.add_patch(patches[1])
+        ax1.add_patch(patches[2])
         #ax1.plot([X,X+PX],[Y,Y+PY],color='k')
         
+    def create_patch(self, units = None):
+        """ Draws a figure with the trap and the colloid inside it"""
+
+        if not units:
+            units = self.center.units
+            
+        X=self.center[0].to(units).magnitude
+        Y=self.center[1].to(units).magnitude
+        
+        # D is the vector that goes fom the center to each of the traps
+        DX=self.direction[0]/2*self.trap.trap_sep.to(units).magnitude
+        DY=self.direction[1]/2*self.trap.trap_sep.to(units).magnitude
+        # P is the vector that goes from the center to the colloid
+        PX=self.colloid[0].to(units).magnitude
+        PY=self.colloid[1].to(units).magnitude
+
+        W = (1/self.trap.stiffness.magnitude)*4e-3
+
+        return [ptch.Circle((X-DX,Y-DY), radius = W, ec='g', fc='g'),
+                ptch.Circle((X+DX,Y+DY), radius = W, ec='y', fc='y'),
+                ptch.Circle((X+PX,Y+PY), radius = W/3, ec='k', fc = 'none')]
+
+    def update_patch(self, patch, units = None):
+        """ Changes the configuration of the colloid display"""
+        if not units:
+            units = self.center.units
+        
+        X=self.center[0].to(units).magnitude
+        Y=self.center[1].to(units).magnitude
+        
+        # D is the vector that goes fom the center to each of the traps
+        DX=self.direction[0]/2*self.trap.trap_sep.to(units).magnitude
+        DY=self.direction[1]/2*self.trap.trap_sep.to(units).magnitude
+        # P is the vector that goes from the center to the colloid
+        PX=self.colloid[0].to(units).magnitude
+        PY=self.colloid[1].to(units).magnitude
+        
+        patch[0].center = (X-DX,Y-DY)
+        patch[1].center = (X+DX,Y+DY)
+        patch[2].center = (X+PX,Y+PY)
+    
     def flip(self):
         """flips the ColloidInTrap by inverting its direction and its colloid attributes. Returns fliped object"""
         cp = copy.deepcopy(self);
@@ -176,10 +199,12 @@ class colloidal_ice(list):
     def display(self, ax = None):
                 
         if not ax:
-            fig1, ax = plt.subplots(1,1)            
+            fig1, ax = plt.subplots(1,1)   
+            
+        units = self.region.units
 
         for s in self:
-            s.display(ax)
+            s.display(ax,units)
         
         ax.set_xlim([self.region[0,0].magnitude,self.region[1,0].magnitude])
         ax.set_ylim([self.region[0,1].magnitude,self.region[1,1].magnitude])
@@ -187,7 +212,57 @@ class colloidal_ice(list):
         ax.set_aspect("equal")
            
         #plt.axis("square")
+        
+    def animate(self,sl=slice(0,-1,1),ax=None,speed = 1, verb=False):
+        """ Animates a trajectory """
     
+        if not ax:
+            fig, ax = plt.subplots(1,1,figsize=(7,7))
+        
+        region = [r.magnitude for r in self.sim.world.region]
+        len_units = self.sim.world.region.units
+        time_units = self.sim.total_time.units
+        
+        particles = self.trj.index.get_level_values('id').unique()
+        n_of_particles = len(particles)
+        frames = self.trj.index.get_level_values('frame').unique().values
+
+        region = [r.magnitude for r in self.sim.world.region]
+        radius = self.sim.particles.radius.to(len_units).magnitude
+        
+        framerate = self.sim.framerate.to(1/time_units).magnitude
+        runtime = self.sim.total_time.to(time_units).magnitude
+        timestep = self.sim.timestep.to(time_units).magnitude
+        frame_duration = (self.sim.total_time/(len(frames-1))*sl.step).to(ureg.ms).magnitude/speed
+        
+        patches = [p for c in self for p in c.create_patch(len_units)]
+        
+        def init():
+            for patch in patches:
+                ax.add_patch(patch)
+            return patches
+
+        def animate(frame_id):
+            frame = frames[sl][frame_id]
+            self.set_state_from_frame(frame = frame)
+            if verb:
+                print("frame[%u] is "%frame,frames[frame])
+            for p1,p2,p3,c in zip(patches[0::3],patches[1::3],patches[2::3],self):
+                c.update_patch([p1,p2,p3],len_units)
+            for patch in patches:
+                ax.add_patch(patch)
+            return patches
+
+        ax.set_xlim(region[0],region[1])
+        ax.set_ylim(region[2],region[3])
+        ax.set(aspect='equal')
+        
+        anim = anm.FuncAnimation(fig, animate, init_func=init,
+                                       frames=len(frames[sl]), interval=frame_duration, blit=True)
+        plt.close(anim._fig)
+            
+        return anim
+        
     def pad_region(self,pad):
         self.region[0] = self.region[0]-pad
         self.region[1] = self.region[1]+pad
