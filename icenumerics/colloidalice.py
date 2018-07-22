@@ -284,7 +284,7 @@ class colloidal_ice(list):
         
         # s = np.shape(np.array(colloids))
         # initial_randomization = np.random.randn(s[0],s[1])*0.1*ureg.um
-        initial_displacement = np.array([[0,0,0.1]]*len(colloids))*ureg.um
+        initial_displacement = np.array([[0,0,0.001]]*len(colloids))*ureg.um
         
         p_type = np.array(classify_objects(particles))
         t_type = np.array(classify_objects(traps))
