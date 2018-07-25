@@ -30,7 +30,7 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
     def sublattice_to_keep(centers):
     
         size = np.max(centers,0)-np.min(centers,0)
-        lattice_size = [np.ceil(size[1]),np.ceil(size[0])]
+        lattice_size = [np.ceil(size[1]/2/np.cos(np.pi/6))+1,np.ceil(size[0]/2/np.cos(np.pi/6)**2)]
     
         centers_hex,dir_hex = honeycomb_spin_ice_geometry(
             lattice_size[0],lattice_size[1],
@@ -38,7 +38,7 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
             )
         centers_hex = centers_hex/units
         centers_hex[:,0:2] = centers_hex[:,1::-1]
-        centers_hex = centers_hex[:,:]*np.tan(np.pi/3)+[1,0.5*np.tan(np.pi/3),0]
+        centers_hex = centers_hex[:,:]*np.tan(np.pi/3)-[0.5,0.5*np.tan(np.pi/3),0]
     
         return centers_hex
         
@@ -46,7 +46,7 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
 
         size = np.max(centers,0)-np.min(centers,0)
     
-        lattice_size = np.ceil(size/np.tan(np.pi/3))[::-1]+2
+        lattice_size = [np.ceil(size[1]/2/np.cos(np.pi/6)),np.ceil(size[0]/2/np.cos(np.pi/6)**2)]
         #sp_tri = ice.spins()
         #sp_tri.create_lattice("triangular",
                               #lattice_size,
@@ -57,7 +57,7 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
         #centers_tri_a = np.array([s.center/sp_tri.lattice for s in sp_tri])
         centers_tri_a = centers_tri_a/units
         centers_tri_a[:,0:2] = centers_tri_a[:,1::-1]
-        centers_tri_a = centers_tri_a[:,:]*np.tan(np.pi/3)-[0,0,0]
+        centers_tri_a = centers_tri_a*np.tan(np.pi/3)-[0,0,0]
 
         centers_tri_b = centers_tri_a+[-1,0,0]
     
