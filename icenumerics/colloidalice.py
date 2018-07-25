@@ -268,8 +268,8 @@ class colloidal_ice(list):
         self.region[1] = self.region[1]+pad
         
         if enforce2d == True:
-            col.region[0,2] = col.region[1,2]+pad-0.5*pad.units
-            col.region[1,2] = col.region[0,2]-pad+0.5*pad.units
+            self.region[0,2] = self.region[1,2]+pad-0.5*pad.units
+            self.region[1,2] = self.region[0,2]-pad+0.5*pad.units
         
     def simulate(self, world, name,
         targetdir = '',
