@@ -38,7 +38,7 @@ def triangle_to_honeycomb(decimate_angles,centers,directions,lattice):
             )
         centers_hex = centers_hex/units
         centers_hex[:,0:2] = centers_hex[:,1::-1]
-        centers_hex = centers_hex[:,:]*np.tan(np.pi/3)-[0.5,0.5*np.tan(np.pi/3),0]
+        centers_hex = centers_hex[:,:]*np.tan(np.pi/3)+[1,0.5*np.tan(np.pi/3),0]
     
         return centers_hex
         
