@@ -118,7 +118,7 @@ class vertices():
                                 ('id',int),
                                 ('Coordination',int),
                                 ('Charge',int),
-                                ('Dipole',int,(2,))])
+                                ('Dipole',float,(2,))])
         
         self.array['Location'] = v
         
