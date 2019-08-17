@@ -218,6 +218,8 @@ class colloidal_ice(list):
     
         if not ax:
             fig, ax = plt.subplots(1,1,figsize=(7,7))
+        else:
+            fig = ax.figure
         
         region = [r.magnitude for r in self.sim.world.region]
         len_units = self.sim.world.region.units
@@ -267,9 +269,9 @@ class colloidal_ice(list):
         self.region[0] = self.region[0]-pad
         self.region[1] = self.region[1]+pad
         
-        if enforce2d == True:
-            self.region[0,2] = self.region[1,2]+pad-0.5*pad.units
-            self.region[1,2] = self.region[0,2]-pad+0.5*pad.units
+        #if enforce2d == True:
+        #    self.region[0,2] = self.region[1,2]+pad-0.5*pad.units
+        #    self.region[1,2] = self.region[0,2]-pad+0.5*pad.units
         
     def simulate(self, world, name,
         targetdir = '',

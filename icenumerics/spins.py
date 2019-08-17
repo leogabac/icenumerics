@@ -50,7 +50,7 @@ class spins(list):
         for s in self:
             s.display(ax)
 
-        plt.axis("equal")
+        ax.set_aspect("equal")
 
     def create_lattice(self, geometry, size,
         lattice_constant = 1, border = "closed spin"):
@@ -89,7 +89,8 @@ class spins(list):
         
         self.__init__(center*latticeunits,direction*latticeunits)
         self.lattice = lattice_constant
-
+        self.size = size
+        
     def order_spins(self, ordering):
         """ Modifies de directions of the spins according to a function f(centers,directions,lattice)
         * The function f(centers,directions,lattice) must return an array A of the same length as `directions`, containing logic values where an element `A[i] = True` means the direction of spins[i] is reversed
