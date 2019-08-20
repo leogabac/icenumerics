@@ -317,7 +317,7 @@ class colloidal_ice(list):
                 height = self[t].trap.height,
                 stiffness = self[t].trap.stiffness,
                 height_spread = self.height_spread,
-                cutoff = self.cutoff
+                cutoff = self[t].trap.cutoff
                 )
                 
         world_sim = mc.world(

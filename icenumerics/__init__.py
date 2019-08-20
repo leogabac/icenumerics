@@ -3,10 +3,10 @@ from pint import UnitRegistry
 import sys
 
 try: 
-    from .magcolloids import magcolloid as mc
+    from .magcolloids import magcolloids as mc
 except ImportError as e:
     try: 
-        import magcolloid as mc
+        import magcolloids as mc
     except ImportError as e:
         raise ImportError
 

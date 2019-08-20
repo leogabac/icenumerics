@@ -15,7 +15,7 @@ class trap():
         trap_sep = 10e3*ureg.nm,
         height = 200*ureg.nm,
         stiffness = 1.2e-4 * ureg.pN/ureg.nm,
-        finite = np.inf):
+        cutoff = np.inf*ureg.um):
         """ This initializes a trap parameter set. """
         
         self.trap_sep = trap_sep;
