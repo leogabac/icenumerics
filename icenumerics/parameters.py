@@ -59,7 +59,8 @@ class world():
             temperature = 300*ureg.K,
             field = 20*ureg.mT,
             dipole_cutoff = 200*ureg.um,
-            enforce2d = True):
+            enforce2d = True,
+            boundaries = ["s","s","p"]):
         """ The force parameter adds a biasing force to the simulation."""
         
         self.temperature = temperature
@@ -67,3 +68,4 @@ class world():
         self.enforce2d = enforce2d
         self.field = field
         self.dipole_cutoff = dipole_cutoff
+        self.boundaries = boundaries

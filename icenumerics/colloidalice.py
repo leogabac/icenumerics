@@ -149,9 +149,9 @@ class colloidal_ice(list):
     It normally takes a spin ice object as input and generates one colloid_in_trap object for each spin
     """
     def __init__(self,
-    arrangement,particle,trap,
-    height_spread = 0, susceptibility_spread = 0,
-    region = None, periodic = None):
+        arrangement,particle,trap,
+        height_spread = 0, susceptibility_spread = 0,
+        region = None, periodic = None):
         """ 
         The arrangement parameter defines the positions and directions of the colloidal ice. There are two possible inputs:
             * a `spins` object: in this case the colloidal ice is copied from the spins arrangement. 
@@ -266,14 +266,22 @@ class colloidal_ice(list):
         return anim
         
     def pad_region(self,pad,enforce2d=True):
+        
         self.region[0] = self.region[0]-pad
         self.region[1] = self.region[1]+pad
         
-        #if enforce2d == True:
-        #    self.region[0,2] = self.region[1,2]+pad-0.5*pad.units
-        #    self.region[1,2] = self.region[0,2]-pad+0.5*pad.units
+        if enforce2d == True:
+            self.region[:,2] = np.array([-.02,.02])*ureg.um
+            
+    def simulate(self, *args,**kargs):
         
-    def simulate(self, world, name,
+        self.simulation(*args,**kargs)
+        
+        self.run_simulation()
+        
+        self.load_simulation()
+    
+    def simulation(self, world, name,
         targetdir = '',
         include_timestamp = True,
         run_time = 60*ureg.s,
@@ -324,6 +332,7 @@ class colloidal_ice(list):
             particles,traps,
             region=self.region.transpose().flatten(),
             walls=[False,False,False],
+            boundaries =  world.boundaries,
             temperature = world.temperature,
             dipole_cutoff = world.dipole_cutoff,
             lj_cutoff = 0,
@@ -334,17 +343,33 @@ class colloidal_ice(list):
         field = mc.field(magnitude = world.field, 
             frequency = 0*ureg.Hz, angle = 0*ureg.degrees)
         
-        self.sim = mc.sim(
-            file_name = name, dir_name = targetdir, stamp_time = include_timestamp,
-            timestep = timestep,
-            framerate = framerate,
-            total_time = run_time,
-            output = output,
-            particles = particles, traps = traps, world = world_sim, field = field)
+        self.run_params = {
+            "file_name":name,
+            "dir_name":targetdir,
+            "stamp_time":include_timestamp,
+            "timestep":timestep,
+            "framerate":framerate,
+            "total_time":run_time,
+            "output":output,
+            "particles":particles,
+            "traps":traps,
+            "world":world_sim,
+            "field":field}
+    
+        self.name = name
+        self.dir_name = targetdir
+        self.include_timestamp = include_timestamp
         
+        self.sim = mc.sim(**self.run_params)
+    
+    def update_simulation(self):
+        self.sim = mc.sim(**self.run_params)
+        
+    def run_simulation(self):
         self.sim.generate_scripts()
         self.sim.run()
-        
+    
+    def load_simulation(self):
         self.trj = self.sim.load(read_trj = True)
         self.frames = self.trj.index.get_level_values("frame").unique()
         self.set_state_from_frame(frame = -1)

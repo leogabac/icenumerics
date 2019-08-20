@@ -72,7 +72,7 @@ def SquareSpinIceDirectionRandomOrdering(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice
 
     return VOrderDirectionArray, HOrderDirectionArray
 
-def square_spin_ice_geometry(Sx,Sy,Lattice,Ordering,Ratio,Boundary):
+def square_spin_ice_geometry(sx,sy,lattice,border):
     """ 
     This function calculates the positions and directions of the spins in a square spin ice system. 
     
@@ -82,45 +82,25 @@ def square_spin_ice_geometry(Sx,Sy,Lattice,Ordering,Ratio,Boundary):
     Then a subroutine concatenates the arrays.
     """
     
-    vsoX = np.arange(0,Sx+1)*Lattice
-    vsoY = np.arange(0,Sy+1)*Lattice
+    if border == "periodic":
     
-    if Boundary == "closed spin":
-        VSpinsX, VSpinsY = np.meshgrid(vsoX,vsoY[0:-1])
-        HSpinsX, HSpinsY = np.meshgrid(vsoX[0:-1],vsoY)
-    elif Boundary == "closed vertex":
-        VSpinsX, VSpinsY = np.meshgrid(vsoX[0:-1],vsoY)
-        HSpinsX, HSpinsY = np.meshgrid(vsoX,vsoY[0:-1])
-    else:
-        raise(ValueError(Boundary+" is not a valid Boundary specification"))
+        t = np.array([0,90])/180*np.pi
+        unit_cell_center = lattice/2*np.array(
+            [np.cos(t),np.sin(t),np.zeros(len(t))]).transpose()
+        unit_cell_direction = lattice*np.array(
+            [np.cos(t),np.sin(t),np.zeros(len(t))]).transpose()
 
-
-    VSpinsX = VSpinsX.flatten(1)[None].T
-    VSpinsY = VSpinsY.flatten(1)[None].T
-    HSpinsX = HSpinsX.flatten(1)[None].T
-    HSpinsY = HSpinsY.flatten(1)[None].T
-
-    Center = SquareSpinIceConcatenateCenters(VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice,Boundary)
-
-    if Ordering == "Random":
-        VOrderDirectionArray, HOrderDirectionArray = \
-            SquareSpinIceDirectionRandomOrdering(
-                VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice)
-
-    elif Ordering == "GroundState":
+    
+    space = np.meshgrid(
+        np.arange(0,sx)*lattice,
+        np.arange(0,sy)*lattice,
+        np.arange(1))
         
-        VOrderDirectionArray, HOrderDirectionArray = \
-            SquareSpinIceDirectionGSOrdering(
-                VSpinsX,VSpinsY,HSpinsX,HSpinsY,Lattice)
-            
-    elif Ordering == "Biased":
-        VOrderDirectionArray = np.ones(VSpinsX.shape,float)
-        HOrderDirectionArray = np.ones(HSpinsX.shape,float)
+    n = np.array([1,1,1])
+    R = np.array([s.flatten()*n[i] for i,s in enumerate(space)])
+    
+    centers = np.concatenate([R.transpose()+c for c in unit_cell_center])
+    directions = np.concatenate([np.ones(np.shape(R.transpose()))+c for c in unit_cell_direction])
 
-    else:
-        error("I do not know this ordering")
     
-    Direction = SquareSpinIceDirection(VOrderDirectionArray*Ratio,HOrderDirectionArray)
-    
-    Direction = Direction*Lattice
-    return Center, Direction
+    return centers, directions

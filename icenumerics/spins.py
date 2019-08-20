@@ -70,7 +70,7 @@ class spins(list):
         if geometry == "square":
             center, direction = square_spin_ice_geometry(
                 size[0], size[1], lattice_constant.magnitude,
-                "Random", Ratio = 1, Boundary = border
+                border = border
             )
                     
         elif geometry == "honeycomb":
