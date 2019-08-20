@@ -14,12 +14,14 @@ class trap():
     def __init__(self,
         trap_sep = 10e3*ureg.nm,
         height = 200*ureg.nm,
-        stiffness = 1.2e-4 * ureg.pN/ureg.nm):
+        stiffness = 1.2e-4 * ureg.pN/ureg.nm,
+        finite = np.inf):
         """ This initializes a trap parameter set. """
         
         self.trap_sep = trap_sep;
         self.height = height;
         self.stiffness = stiffness;
+        self.cutoff = cutoff;
 
 class particle():
       def __init__(self, 
