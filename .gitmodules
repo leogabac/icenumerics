@@ -1,3 +1,3 @@
 [submodule "icenumerics/magcolloids"]
 	path = icenumerics/magcolloids
-	url = https://github.com/aortiza/magcolloids
+	url = https://github.com/aortiza/magcolloids.git
