@@ -369,8 +369,8 @@ class colloidal_ice(list):
         self.sim.generate_scripts()
         self.sim.run()
     
-    def load_simulation(self):
-        self.trj = self.sim.load(read_trj = True)
+    def load_simulation(self, read_trj = True, sl = slice(0,-1,1)):
+        self.trj = self.sim.load(read_trj = read_trj, sl = slice)
         self.frames = self.trj.index.get_level_values("frame").unique()
         self.set_state_from_frame(frame = -1)
         
