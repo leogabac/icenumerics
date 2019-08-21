@@ -100,7 +100,7 @@ def square_spin_ice_geometry(sx,sy,lattice,border):
     R = np.array([s.flatten()*n[i] for i,s in enumerate(space)])
     
     centers = np.concatenate([R.transpose()+c for c in unit_cell_center])
-    directions = np.concatenate([np.ones(np.shape(R.transpose()))+c for c in unit_cell_direction])
+    directions = np.concatenate([np.zeros(np.shape(R.transpose()))+c for c in unit_cell_direction])
 
     
     return centers, directions
