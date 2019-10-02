@@ -9,6 +9,21 @@ def random_ordering(centers,directions,lattice):
     
     return order_array<0
 
+def square_ground_state(centers,directions,lattice):
+    
+    line = np.round((np.sum(centers,axis=1)/lattice-0.5)*1e6)*1e-6
+    even = np.mod(line,2)<0.5
+    odd = np.mod(line,2)>0.5
+
+    dir_new = np.abs(directions)
+    
+    dir_new[even,1] = -1*dir_new[even,1]
+    dir_new[odd,0] = -1*dir_new[odd,0]
+    
+    order_array = (np.round(np.sqrt(np.sum((dir_new-directions)**2,axis=1))*1e6)*1e-6).magnitude>0
+    
+    return order_array
+    
 def honeycomb_spin_solid(centers,directions,lattice):
     """ Honeycomb Spin Solid Phase """
     

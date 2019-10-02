@@ -42,10 +42,10 @@ class colloid_in_trap():
         center, direction, particle, trap):
         """ initializes a colloid_in_trap object """
         
-        self.center = np.array(center)*center.units
+        self.center = np.array(center.magnitude)*center.units
         
         # Direction is always unitary
-        self.direction = np.array(direction)/np.linalg.norm(direction.magnitude,2)
+        self.direction = np.array(direction.magnitude)/np.linalg.norm(direction.magnitude,2)
         
         self.particle = particle
         self.trap = trap
@@ -87,11 +87,11 @@ class colloid_in_trap():
         PX=self.colloid[0].to(units).magnitude
         PY=self.colloid[1].to(units).magnitude
 
-        W = (1/self.trap.stiffness.magnitude)*4e-3
+        W = (self.particle.radius.to(units).magnitude)
 
-        return [ptch.Circle((X-DX,Y-DY), radius = W, ec='g', fc='g'),
-                ptch.Circle((X+DX,Y+DY), radius = W, ec='y', fc='y'),
-                ptch.Circle((X+PX,Y+PY), radius = W/3, ec='k', fc = 'none')]
+        return [ptch.Circle((X-DX,Y-DY), radius = W*1.5, ec='g', fc='g'),
+                ptch.Circle((X+DX,Y+DY), radius = W*1.5, ec='y', fc='y'),
+                ptch.Circle((X+PX,Y+PY), radius = W, ec='k', fc = 'none')]
 
     def update_patch(self, patch, units = None):
         """ Changes the configuration of the colloid display"""
@@ -182,9 +182,9 @@ class colloidal_ice(list):
         if region == None:
             units = centers[0].units
             lower_bounds = np.min(
-                np.array([c.to(units).magnitude for c in centers])*units,0)
+                np.array([c.to(units).magnitude for c in centers]),0)
             upper_bounds = np.max(
-                np.array([c.to(units).magnitude for c in centers])*units,0)
+                np.array([c.to(units).magnitude for c in centers]),0)
             
             region = np.vstack([lower_bounds,upper_bounds])*units
         
@@ -211,7 +211,6 @@ class colloidal_ice(list):
          
         ax.set_aspect("equal")
            
-        #plt.axis("square")
         
     def animate(self,sl=slice(0,-1,1),ax=None,speed = 1, verb=False):
         """ Animates a trajectory """
@@ -369,8 +368,8 @@ class colloidal_ice(list):
         self.sim.generate_scripts()
         self.sim.run()
     
-    def load_simulation(self, read_trj = True, sl = slice(0,-1,1)):
-        self.trj = self.sim.load(read_trj = read_trj, sl = slice)
+    def load_simulation(self, sl = slice(0,-1,1)):
+        self.trj = self.sim.load(read_trj = True, sl = sl)
         self.frames = self.trj.index.get_level_values("frame").unique()
         self.set_state_from_frame(frame = -1)
         
@@ -381,6 +380,8 @@ class colloidal_ice(list):
         for i,c in enumerate(self):
             c.colloid = self.trj.loc[idx[frame,i+1],["x","y","z"]].values*ureg.um - c.center
             c.direction = c.direction * np.sign(np.dot(c.colloid,c.direction))
+            
+        return self
     
     def calculate_energy(self):
         """ Calculates the sum of the inverse cube of all the inter particle distances.
@@ -391,7 +392,41 @@ class colloidal_ice(list):
         colloids = np.array([np.array(c.center+c.colloid) for c in self])
         self.energy = sum(spa.distance.pdist(colloids)**(-3))
         return self.energy
+    
+    def DataFrame(self):
+        frames = self.trj.groupby("frame").count().index
+
         
+        return pd.concat([pd.DataFrame(data = np.array(
+            [np.concatenate([c.center.magnitude,c.direction,c.colloid]) 
+             for c in self.set_state_from_frame(f)]),
+                     columns = ["x","y","z","dx","dy","dz","cx","cy","cz"],
+                     index = pd.Index(range(len(self)),name = "id"))
+                  for f in frames], keys = frames, names = ["frame"])
+        
+    def where(self,center,tol=None):
+    
+        if tol is None:
+            tol = 1e-6*ureg.um
+            
+        return [i for i,c in enumerate(self) if np.linalg.norm(c.center-center)<tol]
+    
+    def copy(self,deep = False):
+        import copy as cp
+        if deep:
+            return cp.deepcopy(self)
+        else:
+            return cp.copy(self)
+
+    def randomize(self):
+
+        import random
+
+        for c in self:
+            if random.randint(0, 1):
+                c.colloid = -c.colloid
+                c.direction = -c.direction
+
 def classify_objects(object_list):
     """ Classifies objects by uniqueness. Returns a list with an object type directory."""
     o_type = -1

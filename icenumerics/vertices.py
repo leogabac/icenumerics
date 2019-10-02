@@ -191,9 +191,26 @@ class vertices():
             for n in self.neighbors[v['id']]:
                 v['Charge']=v['Charge'] + np.sign(np.sum((v['Location']-self.spins[n]['Center'])*self.spins[n]['Direction']))
 
-                v['Dipole']=v['Dipole'] + self.spins[n]['Direction']
+                v['Dipole']=v['Dipole'] + self.spins[n]['Direction']/sp.lattice.magnitude
          
         return self
+    
+    def DataFrame(self):
+        
+        vert_pd = pd.DataFrame(data = self.array["Coordination"],
+                            index = self.array["id"],
+                            columns = ["Coordination"])
+    
+        vert_pd["Charge"] = self.array["Charge"]
+        vert_pd["DipoleX"] = self.array["Dipole"][:,0]
+        vert_pd["DipoleY"] = self.array["Dipole"][:,1]
+
+        vert_pd["LocationX"] = self.array["Location"][:,0]
+        vert_pd["LocationY"] = self.array["Location"][:,1]
+
+        vert_pd.index.name = "id"
+    
+        return vert_pd    
         
     def display(self,ax = False,DspCoord = False):
                 

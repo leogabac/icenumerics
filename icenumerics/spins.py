@@ -14,8 +14,8 @@ class spin():
     
     def __init__(self,center,direction):
         
-        self.center = np.array(center)*center.units
-        self.direction = np.array(direction)*center.units
+        self.center = np.array(center.magnitude)*center.units
+        self.direction = np.array(direction.magnitude)*center.units
         
     def __str__(self):
         return("Spin with Center at [%d %d %d] and Direction [%d %d %d]\n" %\
@@ -41,7 +41,6 @@ class spins(list):
         if len(centers)>0:
             self = self.extend([spin(c,d) for (c,d) in zip(centers,directions)])
         
-        
     def display(self,ax = None, ix = False):
         """ This displays the spins in a pyplot axis. The ix parameter allows us to obtain the spins index, which is useful to access specific indices."""
         if not ax:
@@ -52,8 +51,7 @@ class spins(list):
 
         ax.set_aspect("equal")
 
-    def create_lattice(self, geometry, size,
-        lattice_constant = 1, border = "closed spin"):
+    def create_lattice(self, geometry, size, lattice_constant = 1, border = "closed spin"):
         """ Creates a lattice of spins. 
         The geometry can be:
             * "square"
@@ -121,4 +119,20 @@ class spins(list):
         self = self.extend(
         [spin(c,d) for (c,d) in
              zip(centers[decimation_array],directions[decimation_array])])
+    
+    def from_colloids(self,colloids):
+    
+        self.clear()
+        self = self.extend([spin(col.center,col.direction*self.lattice) for col in colloids])
+    
+    def from_graph(self,graph):
         
+        self.clear()
+        self = self.extend([spin(c,d) for c,d in zip(*graph.spins(self.lattice.units))])
+        
+    def copy(self,deep = False):
+        import copy as cp
+        if deep:
+            return cp.deepcopy(self)
+        else:
+            return cp.copy(self)
