@@ -426,6 +426,12 @@ class colloidal_ice(list):
             if random.randint(0, 1):
                 c.colloid = -c.colloid
                 c.direction = -c.direction
+                
+    def remove(self, idx):
+        """ removes a list of colloids given by the indices idx"""
+        col_list = [c for c in self]
+        self.clear()
+        self.extend([c for i,c in enumerate(col_list) if i not in idx])
 
 def classify_objects(object_list):
     """ Classifies objects by uniqueness. Returns a list with an object type directory."""
