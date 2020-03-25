@@ -35,8 +35,9 @@ class spin():
 class spins(list): 
     """ `spins` is a very general class that contains a list of spin objects. The only feature of this list is that it is created from the centers and directions of the spins, and also that it contains a ´display´ method. """ 
     
-    def __init__(self, centers = [], directions = None):
+    def __init__(self, centers = [], directions = None, lattice_constant=1):
         """To initialize, we can give the centers and directions of the spins contained. However, we can also initialize an empty list, and then populate it using the `extend` method """
+        self.lattice = lattice_constant
         
         if len(centers)>0:
             self = self.extend([spin(c,d) for (c,d) in zip(centers,directions)])
