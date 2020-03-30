@@ -52,7 +52,7 @@ class spins(list):
 
         ax.set_aspect("equal")
 
-    def create_lattice(self, geometry, size, lattice_constant = 1, border = "closed spin"):
+    def create_lattice(self, geometry, size, lattice_constant = 1, border = "closed spin", height = None):
         """ Creates a lattice of spins. 
         The geometry can be:
             * "square"
@@ -71,7 +71,12 @@ class spins(list):
                 size[0], size[1], lattice_constant.magnitude,
                 border = border
             )
-                    
+        elif geometry == "square3D":
+            center, direction = square_spin_ice_geometry3D(
+                size[0], size[1], lattice_constant.magnitude,
+                height.magnitude, border = border
+            )
+            #self.height = height            
         elif geometry == "honeycomb":
             center, direction = honeycomb_spin_ice_geometry(
                 size[0], size[1], lattice_constant.magnitude,
