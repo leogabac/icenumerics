@@ -58,12 +58,12 @@ class colloid_in_trap():
         return("Colloid is in [%d %d %d], trap is [%d %d %d %d %d %d]\n" %\
                (tuple(self.colloid.magnitude)+tuple(self.center.magnitude)+tuple(self.direction)))
                
-    def display(self, ax1=False, units = None):
+    def display(self, ax1=False, units = None, scale = 1):
         """ Draws a figure with the trap and the colloid inside it"""
         if not ax1:
             fig, ax1 = plt.subplots(1,1)
             
-        patches = self.create_patch(units = units)
+        patches = self.create_patch(units = units, scale=scale)
         
         #ax1.plot(X,Y,'k')
         ax1.add_patch(patches[0])
@@ -71,7 +71,7 @@ class colloid_in_trap():
         ax1.add_patch(patches[2])
         #ax1.plot([X,X+PX],[Y,Y+PY],color='k')
         
-    def create_patch(self, units = None):
+    def create_patch(self, units = None, scale = 1):
         """ Draws a figure with the trap and the colloid inside it"""
 
         if not units:
@@ -89,8 +89,8 @@ class colloid_in_trap():
 
         W = (self.particle.radius.to(units).magnitude)
 
-        return [ptch.Circle((X-DX,Y-DY), radius = W*1.5, ec='g', fc='g'),
-                ptch.Circle((X+DX,Y+DY), radius = W*1.5, ec='y', fc='y'),
+        return [ptch.Circle((X-DX,Y-DY), radius = W*scale, ec='g', fc='g'),
+                ptch.Circle((X+DX,Y+DY), radius = W*scale, ec='y', fc='y'),
                 ptch.Circle((X+PX,Y+PY), radius = W, ec='k', fc = 'none')]
 
     def update_patch(self, patch, units = None):
@@ -196,7 +196,7 @@ class colloidal_ice(list):
         self.periodic = periodic
         
                 
-    def display(self, ax = None):
+    def display(self, ax = None, scale = 1):
                 
         if not ax:
             fig1, ax = plt.subplots(1,1)   
@@ -204,7 +204,7 @@ class colloidal_ice(list):
         units = self.region.units
 
         for s in self:
-            s.display(ax,units)
+            s.display(ax,units, scale=scale)
         
         ax.set_xlim([self.region[0,0].magnitude,self.region[1,0].magnitude])
         ax.set_ylim([self.region[0,1].magnitude,self.region[1,1].magnitude])
@@ -379,7 +379,7 @@ class colloidal_ice(list):
         frame = self.frames[frame]
         for i,c in enumerate(self):
             c.colloid = self.trj.loc[idx[frame,i+1],["x","y","z"]].values*ureg.um - c.center
-            c.direction = c.direction * np.sign(np.dot(c.colloid,c.direction))
+            c.direction = c.direction * np.sign(np.dot(c.colloid.magnitude,c.direction))
             
         return self
     

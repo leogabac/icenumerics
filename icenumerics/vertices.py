@@ -42,7 +42,7 @@ def colloidal_ice_vector(C):
     Vectors = np.array(np.zeros(len(C)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
     i=0
     for c in C:
-        Vectors[i] = (c.center[0:2],c.direction[0:2])
+        Vectors[i] = (c.center[0:2].magnitude,c.direction[0:2])
         i=i+1
     return Vectors
     
