@@ -3,10 +3,11 @@ import warnings
 from . import ureg
 
 class trap():
-    # The trap geometry object contains:
-    # TrapSep: Distance between stable points of the traps [in nm]
-    # Height: Hill height of the trap [in nm]
-    # Stiffness: Stiffness of the trap [in pNnm].
+    """ The trap geometry object contains:
+    TrapSep: Distance between stable points of the traps [in nm]
+    Height: Hill height of the trap [in nm]
+    Stiffness: Stiffness of the trap [in pNnm].
+    """
     
     # Trap Separation could be determined also by the spin dipole.
     # I need to think how to put them together. 
@@ -24,18 +25,18 @@ class trap():
         self.cutoff = cutoff;
 
 class particle():
-      def __init__(self, 
+    """
+    The diffusion coefficient can be given instead o the drag.
+    In that case, the temperature is also needed to calculatelm the drag. 
+    This represents the density mismatch of the particle in the solvent
+    """
+    def __init__(self, 
                 radius = 2*ureg.um,
                 susceptibility = 1,
                 drag = 4e6*ureg.pN/(ureg.um/ureg.s), 
                 diffusion = None, temperature = None, 
                 density = 1000*ureg.kg/ureg.m**3):
-        """
-        Initializes a particle type. 
-        The diffusion coefficient can be given instead o the drag.
-        In that case, the temperature is also needed to calculatelm the drag. 
-        This represents the density mismatch of the particle in the solvent
-        """
+        """Initializes a particle type. """
         
         if diffusion:
             
@@ -61,7 +62,7 @@ class world():
             dipole_cutoff = 200*ureg.um,
             enforce2d = True,
             boundaries = ["s","s","p"]):
-        """ The force parameter adds a biasing force to the simulation."""
+        # The force parameter adds a biasing force to the simulation.
         
         self.temperature = temperature
         self.kB = (1.38064852e-23*ureg.J/ureg.K).to(ureg.pN*ureg.nm/ureg.K)

@@ -53,14 +53,15 @@ class spins(list):
         ax.set_aspect("equal")
 
     def create_lattice(self, geometry, size, lattice_constant = 1, border = "closed spin", height = None):
-        """ Creates a lattice of spins. 
+        """ 
+        Creates a lattice of spins. 
         The geometry can be:
             * "square"
             * "honeycomb"
         The border can be 
-            * "closed spin":
-            * "closed vertex" 
-            * "periodic" 
+            * 'closed spin':
+            * 'closed vertex's
+            * 'periodic'
         """
         self.clear()
         
