@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>icenumerics.vertices &#8212; icenumerics v0.1.9 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icenumerics.vertices</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">icenumerics.spins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icenumerics.colloidalice</span> <span class="kn">import</span> <span class="n">colloidal_ice</span>
+<span class="kn">import</span> <span class="nn">subprocess</span> <span class="c1"># Subprocess is a default library which allows us to call a command line program from within a python script</span>
+<span class="kn">import</span> <span class="nn">shutil</span> <span class="c1"># shutil allows us to move files around. This is usefull to organize the resulting input and output files. </span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="k">as</span> <span class="nn">sptl</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="k">def</span> <span class="nf">spin_crossing_point</span><span class="p">(</span><span class="n">S1</span><span class="p">,</span><span class="n">S2</span><span class="p">):</span>
+    <span class="c1"># This works well in 2d. In 3d it&#39;s triciker</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">A</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span>
+        <span class="n">A</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">lam</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="unique_points"><a class="viewcode-back" href="../../API.html#icenumerics.vertices.unique_points">[docs]</a><span class="k">def</span> <span class="nf">unique_points</span><span class="p">(</span><span class="n">Points</span><span class="p">,</span><span class="n">Tol</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns only the distinct points (with a tolerance).&quot;&quot;&quot;</span>
+    <span class="n">Distance</span> <span class="o">=</span> <span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">squareform</span><span class="p">(</span><span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">Points</span><span class="p">))</span>
+    <span class="n">IsLast</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Points</span><span class="p">):</span>
+        <span class="n">IsLast</span> <span class="o">=</span> <span class="n">IsLast</span> <span class="o">+</span> <span class="p">[</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">Distance</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):,</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">Tol</span><span class="p">)]</span>
+        
+    <span class="k">return</span> <span class="n">Points</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">IsLast</span><span class="p">),:]</span></div>
+    
+<div class="viewcode-block" id="colloidal_ice_vector"><a class="viewcode-back" href="../../API.html#icenumerics.vertices.colloidal_ice_vector">[docs]</a><span class="k">def</span> <span class="nf">colloidal_ice_vector</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts an array of centers and directions from a Colloidal Ice System&quot;&quot;&quot;</span>
+    <span class="n">Vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">C</span><span class="p">)),</span><span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Center&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),(</span><span class="s1">&#39;Direction&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
+        <span class="n">Vectors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">direction</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">Vectors</span></div>
+    
+<div class="viewcode-block" id="spin_ice_vector"><a class="viewcode-back" href="../../API.html#icenumerics.vertices.spin_ice_vector">[docs]</a><span class="k">def</span> <span class="nf">spin_ice_vector</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts an array of centers and directions from a Spin Ice System&quot;&quot;&quot;</span>
+    <span class="n">Vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)),</span><span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Center&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),(</span><span class="s1">&#39;Direction&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">S</span><span class="p">:</span>
+        <span class="n">Vectors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="n">s</span><span class="o">.</span><span class="n">direction</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">Vectors</span></div>
+        
+<div class="viewcode-block" id="calculate_neighbor_pairs"><a class="viewcode-back" href="../../API.html#icenumerics.vertices.calculate_neighbor_pairs">[docs]</a><span class="k">def</span> <span class="nf">calculate_neighbor_pairs</span><span class="p">(</span><span class="n">Centers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function makes a list of all the Pairs of Delaunay Neighbors from an array of points&quot;&quot;&quot;</span>
+    
+    <span class="n">tri</span> <span class="o">=</span> <span class="n">sptl</span><span class="o">.</span><span class="n">Delaunay</span><span class="p">(</span><span class="n">Centers</span><span class="p">)</span>
+
+    <span class="c1"># List all Delaunay neighbors in the system</span>
+    <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">tri</span><span class="o">.</span><span class="n">simplices</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Pair&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),(</span><span class="s1">&#39;Distance&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),(</span><span class="s1">&#39;Vertex&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tri</span><span class="o">.</span><span class="n">simplices</span><span class="p">:</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;Pair&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">euclidean</span><span class="p">(</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Pair&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">euclidean</span><span class="p">(</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">NeighborPairs</span></div>
+
+<span class="k">def</span> <span class="nf">from_neighbors_get_nearest_neighbors</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">):</span>
+    <span class="c1"># This function takes a list of Delaunay Neighbor Pairs and returns only those which are close to the minimum distance.</span>
+    <span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">])</span><span class="o">*</span><span class="mf">1.1</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">NeighborPairs</span>
+
+<span class="k">def</span> <span class="nf">get_vertices_positions</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">,</span><span class="n">spins</span><span class="p">):</span>
+    <span class="c1"># From a list of Spins, get neighboring spins, and get the crossing point of each, which defines a vertex.  </span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">):</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;Vertex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spin_crossing_point</span><span class="p">(</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Pair&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Pair&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">NeighborPairs</span>
+
+<span class="k">class</span> <span class="nc">vertices</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This function initializes the Vertices Array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span>
+                      <span class="n">dtype</span><span class="o">=</span><span class="p">[</span>
+                          <span class="p">(</span><span class="s1">&#39;Location&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),</span>
+                          <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="nb">int</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;Coordination&#39;</span><span class="p">,</span><span class="nb">int</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;Charge&#39;</span><span class="p">,</span><span class="nb">float</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;Dipole&#39;</span><span class="p">,</span><span class="nb">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+        
+    <span class="k">def</span> <span class="nf">colloids_to_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">C</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spins</span> <span class="o">=</span> <span class="n">colloidal_ice_vector</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+        
+        <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">calculate_neighbor_pairs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">])</span>
+
+        <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">from_neighbors_get_nearest_neighbors</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">)</span>
+
+        <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">get_vertices_positions</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">)</span>
+        
+        <span class="n">v</span> <span class="o">=</span> <span class="n">unique_points</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Vertex&#39;</span><span class="p">])</span>
+        
+        <span class="c1">## Make Vertex array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">v</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="p">[</span>
+                                <span class="p">(</span><span class="s1">&#39;Location&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),</span>
+                                <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="nb">int</span><span class="p">),</span>
+                                <span class="p">(</span><span class="s1">&#39;Coordination&#39;</span><span class="p">,</span><span class="nb">int</span><span class="p">),</span>
+                                <span class="p">(</span><span class="s1">&#39;Charge&#39;</span><span class="p">,</span><span class="nb">float</span><span class="p">),</span>
+                                <span class="p">(</span><span class="s1">&#39;Dipole&#39;</span><span class="p">,</span><span class="nb">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        
+        <span class="c1">## Make Neighbors directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">i</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">NeighborPairs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">euclidean</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Vertex&#39;</span><span class="p">],</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">])</span><span class="o">&lt;</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Vertex&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-6</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Pair&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            
+            <span class="c1">## Calculate Coordination</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Coordination&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        
+            <span class="c1">## Calculate Charge and Dipole</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+               
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]:</span>
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;Center&#39;</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;Direction&#39;</span><span class="p">]))</span>
+
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span>
+         
+        <span class="k">return</span> <span class="bp">self</span>
+        
+    <span class="k">def</span> <span class="nf">spins_to_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sp</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spins</span> <span class="o">=</span> <span class="n">spin_ice_vector</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+        
+        <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">calculate_neighbor_pairs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">])</span>
+
+        <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">from_neighbors_get_nearest_neighbors</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">)</span>
+
+        <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">get_vertices_positions</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">)</span>
+        
+        <span class="n">v</span> <span class="o">=</span> <span class="n">unique_points</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Vertex&#39;</span><span class="p">])</span>
+        
+        <span class="c1">## Make Vertex array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">v</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="p">[</span>
+                                <span class="p">(</span><span class="s1">&#39;Location&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),</span>
+                                <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="nb">int</span><span class="p">),</span>
+                                <span class="p">(</span><span class="s1">&#39;Coordination&#39;</span><span class="p">,</span><span class="nb">int</span><span class="p">),</span>
+                                <span class="p">(</span><span class="s1">&#39;Charge&#39;</span><span class="p">,</span><span class="nb">float</span><span class="p">),</span>
+                                <span class="p">(</span><span class="s1">&#39;Dipole&#39;</span><span class="p">,</span><span class="nb">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        
+        <span class="c1">## Make Neighbors directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">i</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">NeighborPairs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">euclidean</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Vertex&#39;</span><span class="p">],</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">])</span><span class="o">&lt;</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Vertex&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-6</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Pair&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            
+            <span class="c1">## Calculate Coordination</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Coordination&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        
+            <span class="c1">## Calculate Charge and Dipole</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+               
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]:</span>
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;Center&#39;</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;Direction&#39;</span><span class="p">]))</span>
+
+                <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">sp</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">magnitude</span>
+         
+        <span class="k">return</span> <span class="bp">self</span>
+    
+    <span class="k">def</span> <span class="nf">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">vert_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s2">&quot;Coordination&quot;</span><span class="p">],</span>
+                            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                            <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Coordination&quot;</span><span class="p">])</span>
+    
+        <span class="n">vert_pd</span><span class="p">[</span><span class="s2">&quot;Charge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s2">&quot;Charge&quot;</span><span class="p">]</span>
+        <span class="n">vert_pd</span><span class="p">[</span><span class="s2">&quot;DipoleX&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s2">&quot;Dipole&quot;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">vert_pd</span><span class="p">[</span><span class="s2">&quot;DipoleY&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s2">&quot;Dipole&quot;</span><span class="p">][:,</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">vert_pd</span><span class="p">[</span><span class="s2">&quot;LocationX&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s2">&quot;Location&quot;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">vert_pd</span><span class="p">[</span><span class="s2">&quot;LocationY&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="s2">&quot;Location&quot;</span><span class="p">][:,</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">vert_pd</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span>
+    
+        <span class="k">return</span> <span class="n">vert_pd</span>    
+        
+    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span><span class="n">DspCoord</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+                
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
+            <span class="n">fig1</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>  
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">DspCoord</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;b&#39;</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span><span class="n">radius</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">ec</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">Y</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">DX</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">DY</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Dipole&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patches</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">X</span><span class="o">-</span><span class="n">DX</span><span class="p">,</span><span class="n">Y</span><span class="o">-</span><span class="n">DY</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">DX</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">DY</span><span class="p">,</span><span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">fc</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">))</span>
+                
+        <span class="k">if</span> <span class="n">DspCoord</span><span class="p">:</span> 
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Charge&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;b&#39;</span>
+                    
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span><span class="n">radius</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;Coordination&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">ec</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">Y</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="c1">#ax.set_aspect(&quot;equal&quot;)    </span>
+        <span class="c1">#plt.axis(&quot;equal&quot;)</span>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">icenumerics</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../IceNumericsUsage.html">Usage instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Units.html">About units.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Pandas.html">The multiindex pandas array</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/CalculateEnergy.html">Calculate Energy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/CalculateEnergy.html#Calculate-the-energy-of-a-configuration.">Calculate the energy of a configuration.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../API.html">The <cite>icenumerics</cite> API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Antonio Ortiz-Ambriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

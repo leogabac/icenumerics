@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>The icenumerics API &#8212; icenumerics v0.1.9 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Calculate Energy" href="OtherNotebooks/CalculateEnergy.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="the-icenumerics-api">
+<h1>The <cite>icenumerics</cite> API<a class="headerlink" href="#the-icenumerics-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-icenumerics.spins">
+<span id="the-spins-class"></span><h2>The <cite>spins</cite> class<a class="headerlink" href="#module-icenumerics.spins" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="icenumerics.spins.spin">
+<em class="property">class </em><code class="sig-prename descclassname">icenumerics.spins.</code><code class="sig-name descname">spin</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">center</span></em>, <em class="sig-param"><span class="n">direction</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/spins.html#spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.spins.spin" title="Permalink to this definition">¶</a></dt>
+<dd><p>A spin is defined by two vectors in R3 space.
+The vector center gives the position of the center of the spin
+The vector direction gives the dipole moment of the spin.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="icenumerics.spins.spins">
+<em class="property">class </em><code class="sig-prename descclassname">icenumerics.spins.</code><code class="sig-name descname">spins</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">centers</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">directions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lattice_constant</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/spins.html#spins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.spins.spins" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>spins</cite> is a very general class that contains a list of spin objects. The only feature of this list is that it is created from the centers and directions of the spins, and also that it contains a ´display´ method.</p>
+<dl class="py method">
+<dt id="icenumerics.spins.spins.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list – a shallow copy of L<a class="reference internal" href="_modules/icenumerics/spins.html#spins.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.spins.spins.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.spins.spins.create_lattice">
+<code class="sig-name descname">create_lattice</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geometry</span></em>, <em class="sig-param"><span class="n">size</span></em>, <em class="sig-param"><span class="n">lattice_constant</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">border</span><span class="o">=</span><span class="default_value">'closed spin'</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/spins.html#spins.create_lattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.spins.spins.create_lattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a lattice of spins. 
+The geometry can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“square”</p></li>
+<li><p>“honeycomb”</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>The border can be </dt><dd><ul class="simple">
+<li><p>‘closed spin’:</p></li>
+<li><p>‘closed vertex’s</p></li>
+<li><p>‘periodic’</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.spins.spins.display">
+<code class="sig-name descname">display</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ix</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/spins.html#spins.display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.spins.spins.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>This displays the spins in a pyplot axis. The ix parameter allows us to obtain the spins index, which is useful to access specific indices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.spins.spins.order_spins">
+<code class="sig-name descname">order_spins</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ordering</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/spins.html#spins.order_spins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.spins.spins.order_spins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modifies de directions of the spins according to a function f(centers,directions,lattice)
+* The function f(centers,directions,lattice) must return an array A of the same length as <cite>directions</cite>, containing logic values where an element <cite>A[i] = True</cite> means the direction of spins[i] is reversed</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-icenumerics.colloidalice">
+<span id="the-colloidal-ice-class"></span><h2>The <cite>colloidal_ice</cite> class<a class="headerlink" href="#module-icenumerics.colloidalice" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="icenumerics.colloidalice.classify_objects">
+<code class="sig-prename descclassname">icenumerics.colloidalice.</code><code class="sig-name descname">classify_objects</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">object_list</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#classify_objects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.classify_objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classifies objects by uniqueness. Returns a list with an object type directory.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="icenumerics.colloidalice.colloid_in_trap">
+<em class="property">class </em><code class="sig-prename descclassname">icenumerics.colloidalice.</code><code class="sig-name descname">colloid_in_trap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">center</span></em>, <em class="sig-param"><span class="n">direction</span></em>, <em class="sig-param"><span class="n">particle</span></em>, <em class="sig-param"><span class="n">trap</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloid_in_trap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloid_in_trap" title="Permalink to this definition">¶</a></dt>
+<dd><p>An object ColloidInTrap represents a colloidal particle in a bistable trap. 
+It has three main properties:
+* center is the center of the bistable trap. 
+* direction is a vector (whose magnitude is not important) that points from one stable</p>
+<blockquote>
+<div><p>position to the other.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>colloid is a vector that indicates where the colloid is placed with respect to the center.</p></li>
+</ul>
+<p>Each of these quantities are represented by lists of three elements, which correspond to 
+vectors in R3 space.</p>
+<p>A colloid_in_trap object also has the properties:
+* colloid_properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>susceptibility</p></li>
+<li><p>diffusion</p></li>
+<li><p>diameter</p></li>
+<li><p>rel_density</p></li>
+<li><p>volume</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>trap_properties</dt><dd><ul>
+<li><p>trap_sep: The distance between the traps.</p></li>
+<li><p>height</p></li>
+<li><p>stiffness</p></li>
+<li><p>spread</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloid_in_trap.bias">
+<code class="sig-name descname">bias</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vector</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloid_in_trap.bias"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloid_in_trap.bias" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flips the ColloidInTrap to make it point in the direction of vector (dot(colloid,vector)&gt;0). Returns fliped object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloid_in_trap.create_patch">
+<code class="sig-name descname">create_patch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloid_in_trap.create_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloid_in_trap.create_patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draws a figure with the trap and the colloid inside it</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloid_in_trap.display">
+<code class="sig-name descname">display</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax1</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloid_in_trap.display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloid_in_trap.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draws a figure with the trap and the colloid inside it</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloid_in_trap.flip">
+<code class="sig-name descname">flip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloid_in_trap.flip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloid_in_trap.flip" title="Permalink to this definition">¶</a></dt>
+<dd><p>flips the ColloidInTrap by inverting its direction and its colloid attributes. Returns fliped object</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="icenumerics.colloidalice.colloid_in_trap.trap">
+<code class="sig-name descname">trap</code><em class="property"> = None</em><a class="headerlink" href="#icenumerics.colloidalice.colloid_in_trap.trap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colloid position is given by the direction vectors</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloid_in_trap.update_patch">
+<code class="sig-name descname">update_patch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">patch</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloid_in_trap.update_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloid_in_trap.update_patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes the configuration of the colloid display</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="icenumerics.colloidalice.colloidal_ice">
+<em class="property">class </em><code class="sig-prename descclassname">icenumerics.colloidalice.</code><code class="sig-name descname">colloidal_ice</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arrangement</span></em>, <em class="sig-param"><span class="n">particle</span></em>, <em class="sig-param"><span class="n">trap</span></em>, <em class="sig-param"><span class="n">height_spread</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">susceptibility_spread</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">region</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">periodic</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloidal_ice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloidal_ice" title="Permalink to this definition">¶</a></dt>
+<dd><p>The colloidal ice object is a list of colloid_in_trap objects.
+It also includes some extra parameters contained in the worldparams attribute. 
+It normally takes a spin ice object as input and generates one colloid_in_trap object for each spin</p>
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloidal_ice.animate">
+<code class="sig-name descname">animate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sl</span><span class="o">=</span><span class="default_value">slice(0, - 1, 1)</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">speed</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verb</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloidal_ice.animate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloidal_ice.animate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Animates a trajectory</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloidal_ice.calculate_energy">
+<code class="sig-name descname">calculate_energy</code><span class="sig-paren">(</span><em class="sig-param">B=&lt;Quantity(1</em>, <em class="sig-param">'millitesla')&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloidal_ice.calculate_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloidal_ice.calculate_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the sum of the inverse cube of all the inter particle distances.
+For this it uses the spatial package of scipy which shifts this calculation to
+a compiled program and it’s therefore faster.
+The energy output is given in 1/nm^3
+——
+Parameters:
+B (Quantity): The physical parameters of the particles ($chi$, radius) are stored in the <cite>col</cite> object, but the field needs to be specified. The <cite>calculate_energy</cite> method accepts a vector field, or a scalar quantity. If a scalar quantity is given, it is asumed to be in the vertical direction.</p>
+<p>Results: 
+U (Quantity): The total dipole-dipole energy stored in the system.</p>
+<p>todo: it might be useful to be able to calculate the total internal energy, including the energy of the traps.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloidal_ice.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list – a shallow copy of L<a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloidal_ice.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloidal_ice.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="icenumerics.colloidalice.colloidal_ice.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idx</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/colloidalice.html#colloidal_ice.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.colloidalice.colloidal_ice.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>removes a list of colloids given by the indices idx</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-icenumerics.vertices">
+<span id="the-vertices-class"></span><h2>The <cite>vertices</cite> class<a class="headerlink" href="#module-icenumerics.vertices" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="icenumerics.vertices.calculate_neighbor_pairs">
+<code class="sig-prename descclassname">icenumerics.vertices.</code><code class="sig-name descname">calculate_neighbor_pairs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Centers</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/vertices.html#calculate_neighbor_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.vertices.calculate_neighbor_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function makes a list of all the Pairs of Delaunay Neighbors from an array of points</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="icenumerics.vertices.colloidal_ice_vector">
+<code class="sig-prename descclassname">icenumerics.vertices.</code><code class="sig-name descname">colloidal_ice_vector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">C</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/vertices.html#colloidal_ice_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.vertices.colloidal_ice_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts an array of centers and directions from a Colloidal Ice System</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="icenumerics.vertices.spin_ice_vector">
+<code class="sig-prename descclassname">icenumerics.vertices.</code><code class="sig-name descname">spin_ice_vector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/vertices.html#spin_ice_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.vertices.spin_ice_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts an array of centers and directions from a Spin Ice System</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="icenumerics.vertices.unique_points">
+<code class="sig-prename descclassname">icenumerics.vertices.</code><code class="sig-name descname">unique_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Points</span></em>, <em class="sig-param"><span class="n">Tol</span><span class="o">=</span><span class="default_value">0.1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/vertices.html#unique_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.vertices.unique_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns only the distinct points (with a tolerance).</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-icenumerics.parameters">
+<span id="parameters-classes"></span><h2>Parameters classes<a class="headerlink" href="#module-icenumerics.parameters" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="icenumerics.parameters.particle">
+<em class="property">class </em><code class="sig-prename descclassname">icenumerics.parameters.</code><code class="sig-name descname">particle</code><span class="sig-paren">(</span><em class="sig-param">radius=&lt;Quantity(2</em>, <em class="sig-param">'micrometer')&gt;</em>, <em class="sig-param">susceptibility=1</em>, <em class="sig-param">drag=&lt;Quantity(4000000.0</em>, <em class="sig-param">'piconewton * second / micrometer')&gt;</em>, <em class="sig-param">diffusion=None</em>, <em class="sig-param">temperature=None</em>, <em class="sig-param">density=&lt;Quantity(1000.0</em>, <em class="sig-param">'kilogram / meter ** 3')&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/parameters.html#particle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.parameters.particle" title="Permalink to this definition">¶</a></dt>
+<dd><p>The diffusion coefficient can be given instead o the drag.
+In that case, the temperature is also needed to calculatelm the drag. 
+This represents the density mismatch of the particle in the solvent</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="icenumerics.parameters.trap">
+<em class="property">class </em><code class="sig-prename descclassname">icenumerics.parameters.</code><code class="sig-name descname">trap</code><span class="sig-paren">(</span><em class="sig-param">trap_sep=&lt;Quantity(10000.0</em>, <em class="sig-param">'nanometer')&gt;</em>, <em class="sig-param">height=&lt;Quantity(200</em>, <em class="sig-param">'nanometer')&gt;</em>, <em class="sig-param">stiffness=&lt;Quantity(0.00012</em>, <em class="sig-param">'piconewton / nanometer')&gt;</em>, <em class="sig-param">cutoff=&lt;Quantity(inf</em>, <em class="sig-param">'micrometer')&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/parameters.html#trap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.parameters.trap" title="Permalink to this definition">¶</a></dt>
+<dd><p>The trap geometry object contains:
+TrapSep: Distance between stable points of the traps [in nm]
+Height: Hill height of the trap [in nm]
+Stiffness: Stiffness of the trap [in pNnm].</p>
+</dd></dl>
+
+<p>#.. automodule:: icenumerics.trap
+#       :members:</p>
+<p>#.. automodule:: icenumerics.world
+#       :members:</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">icenumerics</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IceNumericsUsage.html">Usage instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Units.html">About units.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Pandas.html">The multiindex pandas array</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherNotebooks/CalculateEnergy.html">Calculate Energy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherNotebooks/CalculateEnergy.html#Calculate-the-energy-of-a-configuration.">Calculate the energy of a configuration.</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The <cite>icenumerics</cite> API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-icenumerics.spins">The <cite>spins</cite> class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-icenumerics.colloidalice">The <cite>colloidal_ice</cite> class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-icenumerics.vertices">The <cite>vertices</cite> class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-icenumerics.parameters">Parameters classes</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="OtherNotebooks/CalculateEnergy.html" title="previous chapter">Calculate Energy</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Antonio Ortiz-Ambriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/API.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

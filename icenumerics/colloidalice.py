@@ -385,14 +385,51 @@ class colloidal_ice(list):
             
         return self
     
-    def calculate_energy(self):
+    def calculate_energy(self, B = 1*ureg.mT):
         """ Calculates the sum of the inverse cube of all the inter particle distances.
         For this it uses the spatial package of scipy which shifts this calculation to
         a compiled program and it's therefore faster.
         The energy output is given in 1/nm^3
+        ------
+        Parameters:
+        B (Quantity): The physical parameters of the particles ($\chi$, radius) are stored in the `col` object, but the field needs to be specified. The `calculate_energy` method accepts a vector field, or a scalar quantity. If a scalar quantity is given, it is asumed to be in the vertical direction. 
+        
+        Results: 
+        U (Quantity): The total dipole-dipole energy stored in the system.
+        
+        todo: it might be useful to be able to calculate the total internal energy, including the energy of the traps. 
         """
-        colloids = np.array([np.array(c.center+c.colloid) for c in self])
-        self.energy = sum(spa.distance.pdist(colloids)**(-3))
+        
+        
+        mu0 = 4e5*np.pi*ureg.pN/ureg.A**2
+        positions = np.array([np.array(c.center.to("um").magnitude+c.colloid.to("um").magnitude) for c in self])
+        distances = spa.distance.pdist(positions)
+        
+        moment = lambda part: 4/3*np.pi*part.radius**3 * B * part.susceptibility / mu0
+        moments = np.array([moment(c.particle).to(ureg.A*ureg.um**2).magnitude for c in self])
+        
+        try:
+            # This should fail if B is not a vector
+            
+            pairs = np.array([[i,j+i+1] for i,p1 in enumerate(positions[:]) for j,p2 in enumerate(positions[i+1:])])
+            r = positions[pairs[:,0]]-positions[pairs[:,1]]
+            mdotm = np.sum(moments[pairs[:,0]]*moments[pairs[:,1]],axis=1)
+            m1dotr = np.sum(r*moments[pairs[:,0]],axis=1)
+            m2dotr = np.sum(r*moments[pairs[:,1]],axis=1)
+            
+            U = sum( -mu0.magnitude / (4*np.pi) * ((3*m1dotr*m2dotr)/distances**5-mdotm/distances**3))
+            
+        except np.AxisError:
+            
+            mdotm = np.array([m1*moments[j+i+1] 
+                            for i,m1 in enumerate(moments[:]) 
+                            for j,m2 in enumerate(moments[i+1:])])
+                
+            U = sum(mu0.magnitude / (4*np.pi) * mdotm * (distances)**(-3))
+ 
+        
+        self.energy = (U*ureg.pN*ureg.um).to("pN nm")
+        
         return self.energy
     
     def DataFrame(self):

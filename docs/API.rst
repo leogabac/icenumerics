@@ -1,0 +1,27 @@
+======================
+The `icenumerics` API
+======================
+
+The `spins` class
+======================
+
+.. automodule:: icenumerics.spins
+	:members:
+	 
+The `colloidal_ice` class
+==========================
+
+.. automodule:: icenumerics.colloidalice
+	:members:
+	
+The `vertices` class
+=====================
+.. automodule:: icenumerics.vertices
+	:members:
+	
+Parameters classes
+===================
+
+.. automodule:: icenumerics.parameters
+	:members:
+	
