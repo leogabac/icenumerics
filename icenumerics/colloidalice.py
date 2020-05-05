@@ -286,7 +286,8 @@ class colloidal_ice(list):
         run_time = 60*ureg.s,
         framerate = 15*ureg.Hz,
         timestep = 100*ureg.us,
-        output = ["x","y","z"]):
+        output = ["x","y","z"],
+        processors = 1):
         
         particles = [c.particle for c in self]
         traps = [c.trap for c in self]
@@ -353,7 +354,8 @@ class colloidal_ice(list):
             "particles":particles,
             "traps":traps,
             "world":world_sim,
-            "field":field}
+            "field":field
+            "processors":processors}
     
         self.name = name
         self.dir_name = targetdir

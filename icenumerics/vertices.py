@@ -54,6 +54,14 @@ def spin_ice_vector(S):
         Vectors[i] = (s.center[0:2],s.direction[0:2])
         i=i+1
     return Vectors
+    
+def trj_ice_vector(trj_frame):
+    """Extracts an array of centers and directions from a frame in a trj"""
+    Vectors = np.array(np.zeros(len(trj_frame)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
+    Vectors["Center"] = trj_frame.loc[:,["x","y"]]
+    Vectors["Direction"] = trj_frame.loc[:,["dx","dy"]]
+    
+    return Vectors
         
 def calculate_neighbor_pairs(Centers):
     """This function makes a list of all the Pairs of Delaunay Neighbors from an array of points"""
@@ -89,19 +97,74 @@ def get_vertices_positions(NeighborPairs,spins):
     return NeighborPairs
 
 class vertices():
-    def __init__(self):
-        # This function initializes the Vertices Array
+    def __init__(self, colloidal_ice = None, spin_ice = None, trj = None, id_label = "id", static = True):
+        """ Initializes the vertices array.
+        Initialization method for the vertex class. If an object is given to create a vertex array, do so. 
+        ---------
+        Parameters:
+        * colloidal_ice (colloidal_ice object, optional): Initalizes the vertices from a colloidal_ice object
+        * spin_ice (spin_ice object, optional): Initializes the vertices from a spin_ice object
+        * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. 
+        * id_label (string, optional): If the index of `trj` has more than one level, this is the name of the level that identifies particles. Defaults to "id".
+        * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.
+        """
         self.array=np.array([],
                       dtype=[
                           ('Location', float,(2,)),
                           ('id',int),
                           ('Coordination',int),
-                          ('Charge',float),
+                          ('Charge',int),
                           ('Dipole',float,(2,))])
+                          
+        if colloidal_ice is not None:
+            self.colloids_to_vertices(colloidal_ice)
+
+        elif spin_ice is not None:
+            self.spins_to_vertices(spin_ice)
+            
+        elif trj is not None:
+            self.trj_to_vertices(trj, id_label)
         
     def colloids_to_vertices(self,C):
 
         self.spins = colloidal_ice_vector(C)
+        
+        return self.classify_vertices(self)
+        
+    def spins_to_vertices(self,sp):
+
+        self.spins = spin_ice_vector(sp)
+        
+        return self.classify_vertices(self)
+        
+    def trj_to_vertices(self,trj,id_label = None, static = True):
+        """ Convert a trj into a vertex array. 
+        If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers. 
+        ---------
+        Parameters: 
+        * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. 
+        * id_label (string, "id"): If the index of `trj` has more than one level, this is the name of the level that identifies particles.
+        * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.
+        """
+        
+        if trj.index.nlevels==1:
+            self.spins = trj_ice_vector(trj)
+            return self.classify_vertices()
+        else:
+            def classify_vertices_single_frame(trj_frame):
+                self.spins = trj_ice_vector(trj_frame)
+                self.classify_vertices()
+                return self.DataFrame()
+                
+            id_i = np.where([n=="id" for n in trj.index.names])
+            other_i = list(trj.index.names)
+            other_i.remove(other_i[id_i[0][0]])
+            
+            self.dynamic_array = trj.groupby(other_i).classify_vertices_single_frame()
+            return self
+            
+    
+    def classify_vertices(self):
         
         NeighborPairs = calculate_neighbor_pairs(self.spins['Center'])
 
@@ -117,7 +180,7 @@ class vertices():
                                 ('Location', float,(2,)),
                                 ('id',int),
                                 ('Coordination',int),
-                                ('Charge',float),
+                                ('Charge',int),
                                 ('Dipole',float,(2,))])
         
         self.array['Location'] = v
@@ -146,54 +209,7 @@ class vertices():
                 v['Dipole']=v['Dipole'] + self.spins[n]['Direction']
          
         return self
-        
-    def spins_to_vertices(self,sp):
 
-        self.spins = spin_ice_vector(sp)
-        
-        NeighborPairs = calculate_neighbor_pairs(self.spins['Center'])
-
-        NeighborPairs = from_neighbors_get_nearest_neighbors(NeighborPairs)
-
-        NeighborPairs = get_vertices_positions(NeighborPairs,self.spins)
-        
-        v = unique_points(NeighborPairs['Vertex'])
-        
-        ## Make Vertex array
-        self.array=np.array(np.empty(np.shape(v)[0]),
-                            dtype=[
-                                ('Location', float,(2,)),
-                                ('id',int),
-                                ('Coordination',int),
-                                ('Charge',float),
-                                ('Dipole',float,(2,))])
-        
-        self.array['Location'] = v
-        
-        ## Make Neighbors directory
-        self.neighbors = {}
-
-        for i,v in enumerate(self.array):
-            v['id']=i
-            self.neighbors[i] = []
-            for n in NeighborPairs:
-                if sptl.distance.euclidean(n['Vertex'],v['Location'])<np.mean(n['Vertex']*1e-6):
-                    self.neighbors[i]=self.neighbors[i]+list(n['Pair'])
-            self.neighbors[i] = set(self.neighbors[i])
-            
-            ## Calculate Coordination
-            v['Coordination'] = len(self.neighbors[i])
-        
-            ## Calculate Charge and Dipole
-            v['Charge'] = 0
-            v['Dipole'] = [0,0]
-               
-            for n in self.neighbors[v['id']]:
-                v['Charge']=v['Charge'] + np.sign(np.sum((v['Location']-self.spins[n]['Center'])*self.spins[n]['Direction']))
-
-                v['Dipole']=v['Dipole'] + self.spins[n]['Direction']/sp.lattice.magnitude
-         
-        return self
     
     def DataFrame(self):
         
@@ -212,7 +228,7 @@ class vertices():
     
         return vert_pd    
         
-    def display(self,ax = False,DspCoord = False):
+    def display(self,ax = False,DspCoord = False,dpl_scale = 1, dpl_width = 5):
                 
         if not ax:
             fig1, ax = plt.subplots(1,1)  
@@ -229,9 +245,9 @@ class vertices():
                 X = v['Location'][0]
                 Y = v['Location'][1]
                 if v['Charge']==0:
-                    DX = v['Dipole'][0]
-                    DY = v['Dipole'][1]
-                    ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=5,fc='k'))
+                    DX = v['Dipole'][0]*dpl_scale
+                    DY = v['Dipole'][1]*dpl_scale
+                    ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=dpl_width,fc='k'))
                 
         if DspCoord: 
             for v in self.array:
