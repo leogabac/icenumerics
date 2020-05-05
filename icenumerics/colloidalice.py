@@ -354,7 +354,7 @@ class colloidal_ice(list):
             "particles":particles,
             "traps":traps,
             "world":world_sim,
-            "field":field
+            "field":field,
             "processors":processors}
     
         self.name = name
