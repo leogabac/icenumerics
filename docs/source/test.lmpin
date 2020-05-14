@@ -32,7 +32,7 @@ variable fieldz atom v_Bmag*cos(v_theta)
 
 fix 	1 Atoms setdipole v_fieldx v_fieldy v_fieldz 0
 
-fix 	2 Atoms bd 300 0.001 379303 
+fix 	2 Atoms bd 300 0.001 48729 
 
 fix     3 Atoms addforce 0 0 -0.0
 

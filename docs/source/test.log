@@ -20,8 +20,8 @@ read_data ./test.lmpdata
   0 = max # of 1-3 neighbors
   0 = max # of 1-4 neighbors
   1 = max # of special neighbors
-  special bonds CPU = 0.000172853 secs
-  read_data CPU = 0.00303483 secs
+  special bonds CPU = 0.00018096 secs
+  read_data CPU = 0.00405788 secs
 group Atoms type 1
 339 atoms in group Atoms
 group Traps type 2
@@ -46,7 +46,7 @@ variable fieldz atom v_Bmag*cos(v_theta)
 
 fix 	1 Atoms setdipole v_fieldx v_fieldy v_fieldz 0
 
-fix 	2 Atoms bd 300 0.001 379303
+fix 	2 Atoms bd 300 0.001 48729
 
 fix     3 Atoms addforce 0 0 -0.0
 
@@ -142,35 +142,35 @@ Step Atoms
     5800      678 
     5900      678 
     6000      678 
-Loop time of 0.713015 on 1 procs for 6000 steps with 678 atoms
+Loop time of 0.71091 on 1 procs for 6000 steps with 678 atoms
 
-Performance: 7270533469849883.000 ns/day, 0.000 hours/ns, 8414.969 timesteps/s
-96.0% CPU use with 1 MPI tasks x no OpenMP threads
+Performance: 7292061446662774.000 ns/day, 0.000 hours/ns, 8439.886 timesteps/s
+93.9% CPU use with 1 MPI tasks x no OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 0.16163    | 0.16163    | 0.16163    |   0.0 | 22.67
-Bond    | 0.071682   | 0.071682   | 0.071682   |   0.0 | 10.05
-Neigh   | 0.0073202  | 0.0073202  | 0.0073202  |   0.0 |  1.03
-Comm    | 0.0012577  | 0.0012577  | 0.0012577  |   0.0 |  0.18
-Output  | 0.039181   | 0.039181   | 0.039181   |   0.0 |  5.50
-Modify  | 0.41477    | 0.41477    | 0.41477    |   0.0 | 58.17
-Other   |            | 0.01717    |            |       |  2.41
+Pair    | 0.15487    | 0.15487    | 0.15487    |   0.0 | 21.78
+Bond    | 0.070993   | 0.070993   | 0.070993   |   0.0 |  9.99
+Neigh   | 0.011705   | 0.011705   | 0.011705   |   0.0 |  1.65
+Comm    | 0.0014126  | 0.0014126  | 0.0014126  |   0.0 |  0.20
+Output  | 0.041286   | 0.041286   | 0.041286   |   0.0 |  5.81
+Modify  | 0.41374    | 0.41374    | 0.41374    |   0.0 | 58.20
+Other   |            | 0.0169     |            |       |  2.38
 
 Nlocal:    678 ave 678 max 678 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Nghost:    0 ave 0 max 0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Neighs:    625 ave 625 max 625 min
+Neighs:    627 ave 627 max 627 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:  1250 ave 1250 max 1250 min
+FullNghs:  1254 ave 1254 max 1254 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 1250
-Ave neighs/atom = 1.84366
+Total # of neighbors = 1254
+Ave neighs/atom = 1.84956
 Ave special neighs/atom = 1
-Neighbor list builds = 5
+Neighbor list builds = 8
 Dangerous builds = 1
                     
 Total wall time: 0:00:00

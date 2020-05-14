@@ -25,9 +25,3 @@ Parameters classes
 .. automodule:: icenumerics.parameters
 	:members:
 	
-#.. automodule:: icenumerics.trap
-#	:members:
-	
-#.. automodule:: icenumerics.world
-#	:members:
-
