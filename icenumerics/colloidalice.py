@@ -294,42 +294,47 @@ class colloidal_ice(list):
 
         colloids = [c.colloid.to(ureg.um).magnitude for c in self]*ureg.um
         centers = [c.center.to(ureg.um).magnitude for c in self]*ureg.um
-        directions = [c.direction for c in self]
+        directions = np.array([c.direction for c in self])
         
         # s = np.shape(np.array(colloids))
         # initial_randomization = np.random.randn(s[0],s[1])*0.1*ureg.um
         initial_displacement = np.array([[0,0,0.001]]*len(colloids))*ureg.um
+        positions = colloids+centers+initial_displacement
         
-        p_type = np.array(classify_objects(particles))
-        t_type = np.array(classify_objects(traps))
+        p_type, inverse_p = unique_objects(particles)
+        t_type, inverse_t = unique_objects(traps)
+        
+        particle_types = []
+        for i,p in enumerate(p_type):
 
-        for p in np.unique(p_type):
-
-            particles = mc.particles(
-                colloids+centers+initial_displacement,
+            
+            particle_types.append(mc.particles(
+                positions[np.array(inverse_p)==i],
                 atom_type = 0,
                 atoms_id = np.arange(len(colloids)),
-                radius = self[p].particle.radius,
-                susceptibility = self[p].particle.susceptibility,
-                drag = self[p].particle.drag)
+                radius = p.radius,
+                susceptibility = p.susceptibility,
+                drag = p.drag))
 
-        for t in np.unique(t_type):
+        trap_types = []
+        for i,t in enumerate(t_type):
 
-            traps = mc.bistable_trap(
-                centers,
-                directions,
-                particles,
+            subset_trap = None
+                        
+            trap_types.append(mc.bistable_trap(
+                centers[np.array(inverse_t)==i],  
+                directions[np.array(inverse_t)==i],
+                particle_types, [np.array(inverse_t)==i], # I don't know how this would work for several types of particles. 
                 atom_type = 1, 
                 trap_id = np.arange(len(centers))+len(colloids),
-                distance = self[t].trap.trap_sep,
-                height = self[t].trap.height,
-                stiffness = self[t].trap.stiffness,
+                distance = t.trap_sep,
+                height = t.height,
+                stiffness = t.stiffness,
                 height_spread = self.height_spread,
-                cutoff = self[t].trap.cutoff
-                )
-                
+                cutoff = t.cutoff))
+            
         world_sim = mc.world(
-            particles,traps,
+            particle_types,trap_types,
             region=self.region.transpose().flatten(),
             walls=[False,False,False],
             boundaries =  world.boundaries,
@@ -351,8 +356,8 @@ class colloidal_ice(list):
             "framerate":framerate,
             "total_time":run_time,
             "output":output,
-            "particles":particles,
-            "traps":traps,
+            "particles":particle_types,
+            "traps":trap_types,
             "world":world_sim,
             "field":field,
             "processors":processors}
@@ -472,16 +477,43 @@ class colloidal_ice(list):
         self.clear()
         self.extend([c for i,c in enumerate(col_list) if i not in idx])
 
+def unique_objects(object_list):
+    """ Classifies objects by uniqueness. 
+    Returns:
+    list_of_unique: a list with a single instance of each unique objects
+    inverse: an array of where in list_of_unique the object is found. list_of_unque[inverse] == object_list
+    """
+    
+    set_of_unique = {t for t in object_list}
+    list_of_unique = list(set_of_unique)
+    
+    
+    def where(obj, list_of_unique):
+        """ returns the location of the object obj in the list_of_unique. """
+        for i,unique_object in enumerate(list_of_unique):
+            if obj == unique_object:
+                return i
+            
+    inverse = [where(obj,list_of_unique) for obj in object_list]
+     
+    return list_of_unique, inverse
+
+
+import warnings
+
 def classify_objects(object_list):
     """ Classifies objects by uniqueness. Returns a list with an object type directory."""
-    o_type = -1
+    o_type = -1 # Default (maybe)
 
     def where(obj,obj_list):
         """returns the first occurence of `particle` in the array `particles`"""
         for i,o in enumerate(obj_list):
             if o==obj:
                 return i
-
+                
+    # This warning was made in 25-05-2020.
+    warnings.warn(DeprecationWarning("The function classify_objects, in colloidalice doesn't work properly and will be removed soon. Use instead the function unique_objects"))
+    
     type_dict = []
 
     for i,o in enumerate(object_list):
