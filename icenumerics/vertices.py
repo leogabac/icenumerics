@@ -129,13 +129,13 @@ class vertices():
 
         self.spins = colloidal_ice_vector(C)
         
-        return self.classify_vertices(self)
+        return self.classify_vertices()
         
     def spins_to_vertices(self,sp):
 
         self.spins = spin_ice_vector(sp)
         
-        return self.classify_vertices(self)
+        return self.classify_vertices()
         
     def trj_to_vertices(self,trj,id_label = None, static = True):
         """ Convert a trj into a vertex array. 
