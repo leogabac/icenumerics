@@ -28,6 +28,7 @@ class spin():
         DX=self.direction[0].magnitude*0.3
         DY=self.direction[1].magnitude*0.3
         W = np.sqrt(DX**2+DY**2)
+        self.width = W
         ax1.plot([X],[Y],'b')
         #ax1.plot([X-DX,X+DX],[Y-DY,Y+DY],'-+')
         ax1.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=W,fc='b'))
@@ -45,11 +46,20 @@ class spins(list):
     def display(self,ax = None, ix = False):
         """ This displays the spins in a pyplot axis. The ix parameter allows us to obtain the spins index, which is useful to access specific indices."""
         if not ax:
-            fig1, ax = plt.subplots(1,1)            
+            ax = plt.gca() 
 
         for s in self:
             s.display(ax)
+        
+        center = np.array([s.center.magnitude for s in self])
+        direction = np.array([s.direction.magnitude/2 for s in self])
+        width = np.array([[s.width/2] for s in self])
+        extrema = np.concatenate([center+direction+width,center-direction-width])
 
+        region = np.array([np.min(extrema,axis=0)[:2],np.max(extrema,axis=0)[:2]]).transpose().flatten()
+
+        ax.axis(region)
+        
         ax.set_aspect("equal")
 
     def create_lattice(self, geometry, size, lattice_constant = 1, border = "closed spin", height = None):

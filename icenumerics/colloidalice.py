@@ -229,7 +229,10 @@ class colloidal_ice(list):
         frames = self.trj.index.get_level_values('frame').unique().values
 
         region = [r.magnitude for r in self.sim.world.region]
-        radius = self.sim.particles.radius.to(len_units).magnitude
+        try:
+            radius = [self.sim.particles.radius.to(len_units).magnitude]
+        except AttributeError:
+            radius = [p.radius.to(len_units).magnitude for p in self.sim.particles]
         
         framerate = self.sim.framerate.to(1/time_units).magnitude
         runtime = self.sim.total_time.to(time_units).magnitude
