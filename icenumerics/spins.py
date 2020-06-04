@@ -14,8 +14,8 @@ class spin():
     
     def __init__(self,center,direction):
         
-        self.center = np.array(center.magnitude)*center.units
-        self.direction = np.array(direction.magnitude)*center.units
+        self.center = np.array(center.magnitude,dtype="float")*center.units
+        self.direction = np.array(direction.magnitude,dtype="float")*center.units
         
     def __str__(self):
         return("Spin with Center at [%d %d %d] and Direction [%d %d %d]\n" %\

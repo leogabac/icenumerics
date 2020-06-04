@@ -14,6 +14,6 @@ Welcome to icenumerics's documentation!
    IceNumericsUsage
    Units
    Pandas
+   OtherNotebooks/ForcesOfTheSimulation
    OtherNotebooks/CalculateEnergy
    API
-   

@@ -42,10 +42,10 @@ class colloid_in_trap():
         center, direction, particle, trap):
         """ initializes a colloid_in_trap object """
         
-        self.center = np.array(center.magnitude)*center.units
+        self.center = np.array(center.magnitude,dtype="float")*center.units
         
         # Direction is always unitary
-        self.direction = np.array(direction.magnitude)/np.linalg.norm(direction.magnitude,2)
+        self.direction = np.array(direction.magnitude,dtype="float")/np.linalg.norm(direction.magnitude,2)
         
         self.particle = particle
         self.trap = trap
@@ -166,7 +166,7 @@ class colloidal_ice(list):
         else:
             centers = arrangement['centers']
             directions = arrangement['directions']
-        
+
         if not hasattr(particle,'__getitem__'):
             particle = [particle for c in centers]
         if not hasattr(trap,'__getitem__'):
@@ -272,7 +272,7 @@ class colloidal_ice(list):
         self.region[0] = self.region[0]-pad
         self.region[1] = self.region[1]+pad
         
-        if enforce2d == True:
+        if enforce2d:
             self.region[:,2] = np.array([-.02,.02])*ureg.um
             
     def simulate(self, *args,**kargs):
@@ -363,7 +363,6 @@ class colloidal_ice(list):
         self.name = name
         self.dir_name = targetdir
         self.include_timestamp = include_timestamp
-        
         self.sim = mc.sim(**self.run_params)
     
     def update_simulation(self):

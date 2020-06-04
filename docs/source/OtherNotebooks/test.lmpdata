@@ -1,0 +1,28 @@
+This is the initial atom setup of ./test.lmpdata
+2 atoms 
+2 atom types 
+1 bonds 
+1 bond types 
+-3.0 3.0 xlo xhi 
+-3.0 3.0 ylo yhi 
+-0.02 0.02 zlo zhi 
+
+Atoms
+
+1	 1	 1.0	 0.0	 0.001	 2	 0.00681942527473995	 0.0	 0	 0	 0	 0	 1 #atom id|type|x0|y0|z0|d|rho|m|mx|my|mz|chi|trap_id
+2	 2	 0.0	 0.0	 0.0	 1	 1	 0	 2.0	 0.0	 0.0	 0	 1 #trap id|type|x0|y0|z0|1|1|0|dx|dy|dz|0|atom_id
+
+Bonds
+
+1 1 2 1
+
+Bond Coeffs
+
+1  0.0009999999999999998 1.6000000000000003e-05
+
+PairIJ Coeffs
+
+1 1 lj/cut/dipole/cut 0.0 0 0 200
+1 2 none
+2 2 none
+
