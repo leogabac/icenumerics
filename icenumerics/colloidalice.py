@@ -379,11 +379,15 @@ class colloidal_ice(list):
         
     def set_state_from_frame(self, frame):
         
-        idx = pd.IndexSlice
         frame = self.frames[frame]
         for i,c in enumerate(self):
-            c.colloid = self.trj.loc[idx[frame,i+1],["x","y","z"]].values*ureg.um - c.center
-            c.direction = c.direction * np.sign(np.dot(c.colloid.magnitude,c.direction))
+
+            c.colloid = self.trj.loc[(frame,i+1),["x","y","z"]].values*ureg.um - c.center
+
+            dot_prod = np.dot(c.colloid.magnitude,c.direction)
+            dot_prod_sign = (dot_prod>=0)*1+(dot_prod<0)*(-1)
+            
+            c.direction = c.direction * dot_prod_sign
             
         return self
     

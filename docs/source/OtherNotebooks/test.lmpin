@@ -17,7 +17,7 @@ mass * 1
 ### ---Variables--- ###
 
 ## magnetic field
-variable Bmag atom 0.0
+variable Bmag atom 5.322907795715563e-05
 variable freq atom 0.0
 variable theta atom 0.0
 variable phi atom 0.0
@@ -29,15 +29,15 @@ variable fieldz atom v_Bmag*cos(v_theta)
 ### ---Fixes--- ###
 
 fix 	1 Atoms setdipole v_fieldx v_fieldy v_fieldz 0
-fix 	2 Atoms bd 300 0.001 312424 
+fix 	2 Atoms bd 300 0.001 438932 
 
 fix     3 Atoms addforce 0 0 -0.0 
 
 fix 	5 all enforce2d_bd
 
 ### ---Run Commands--- ###
-timestep 	1000 
-dump 	3 all custom 100 ./test.lammpstrj id type x	 y	 z	 fx	 fy	 fz
+timestep 	10000.0 
+dump 	3 all custom 1 ./test.lammpstrj id type x	 y	 z
 thermo_style 	custom step atoms
 thermo 	100  
-run 	10000000 
+run 	6000 
