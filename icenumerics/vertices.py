@@ -146,7 +146,7 @@ def update_edge_directions(edges, spins, positions):
 
         if (e<0).any():
             # This happens when a single vertex is assigned to an edge 
-            vertex = e[e>0]
+            vertex = e[e>=0]
             if vertex.index[0]=="start":
                 vertex_join = spins["Center"][e.name]-positions[vertex[0]]
             elif vertex.index[0]=="end":
