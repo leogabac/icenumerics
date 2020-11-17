@@ -9,6 +9,8 @@ import matplotlib
 import scipy.spatial as sptl
 import pandas as pd
 
+import tqdm.notebook as tqdm
+
 def spin_crossing_point(S1,S2):
     # This works well in 2d. In 3d it's triciker
     if not (S1['Direction']==S2['Direction']).all():
@@ -140,13 +142,14 @@ def where_is_edge(e, edge_directory):
 def update_edge_directions(edges, spins, positions):
     """ Map the 'spins' to the edge directions in 'edges'. """
 
-    for i,e in edges.iterrows():
+
+    for i,e in tqdm.tqdm(edges.iterrows(), len(edges)):
 
         spin_direction = spins["Direction"][e.name]
 
         if (e<0).any():
             # This happens when a single vertex is assigned to an edge 
-            vertex = e[e>0]
+            vertex = e[e>=0]
             if vertex.index[0]=="start":
                 vertex_join = spins["Center"][e.name]-positions[vertex[0]]
             elif vertex.index[0]=="end":
@@ -165,11 +168,11 @@ def create_edge_array(edge_directory, spins = None, positions = None):
     """ Retrieve the edge array from the edge_directory. 
     If spins and positions are given they are used to calculate the directions of the edges. 
     """
-    
-    edge_ids = np.unique(np.array([e for v in edge_directory for e in edge_directory[v]]))
+
+    edge_ids = np.unique(np.array([e for v in edge_directory for e in tqdm.tqdm(edge_directory[v])]))
     
     edges = np.array([[e,*where_is_edge(e, edge_directory)] 
-                      for e in edge_ids])
+                      for e in progress_func(edge_ids)])
     
     edges = pd.DataFrame(data = edges[:,1:],
                          columns=["start","end"],
