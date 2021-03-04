@@ -1,7 +1,5 @@
 from icenumerics.spins import *
 from icenumerics.colloidalice import colloidal_ice
-import subprocess # Subprocess is a default library which allows us to call a command line program from within a python script
-import shutil # shutil allows us to move files around. This is usefull to organize the resulting input and output files. 
 import os
 import sys
 
@@ -10,6 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import scipy.spatial as sptl
 import pandas as pd
+
+import tqdm.notebook as tqdm
 
 def spin_crossing_point(S1,S2):
     # This works well in 2d. In 3d it's triciker
@@ -28,14 +28,28 @@ def spin_crossing_point(S1,S2):
     else:
         return np.Inf+np.zeros(np.shape(S1['Center']))
 
-def unique_points(Points,Tol = 0.1):
+def unique_points(points,tol = 0.1):
     """Returns only the distinct points (with a tolerance)."""
-    Distance = sptl.distance.squareform(sptl.distance.pdist(Points))
-    IsLast = []
-    for i,p in enumerate(Points):
-        IsLast = IsLast + [not np.any(Distance[(i+1):,i]<=Tol)]
+    flatten = lambda lst: [el for l in lst for el in l]
+
+    unique_points = []
+    inverse = np.empty(len(points), dtype="uint16")
+    copies_assigned = []
+
+    for i,p in enumerate(points):
+        if not np.isin(i, flatten(copies_assigned)):
+
+            kdt_points = spa.cKDTree(points)
+
+            same_point_copies = kdt_points.query_ball_point(p, tol)
+
+            copies_assigned.append(same_point_copies)
+            unique_points.append(points[same_point_copies].mean(axis=0))
+            inverse[same_point_copies] = len(unique_points)-1
+
+    unique_points = np.array(unique_points)
         
-    return Points[np.array(IsLast),:]
+    return unique_points, inverse, copies_assigned
     
 def colloidal_ice_vector(C):
     """Extracts an array of centers and directions from a Colloidal Ice System"""
@@ -57,9 +71,12 @@ def spin_ice_vector(S):
     
 def trj_ice_vector(trj_frame):
     """Extracts an array of centers and directions from a frame in a trj"""
+    
     Vectors = np.array(np.zeros(len(trj_frame)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
     Vectors["Center"] = trj_frame.loc[:,["x","y"]]
-    Vectors["Direction"] = trj_frame.loc[:,["dx","dy"]]
+    
+    d = np.sqrt((trj_frame.loc[:,["dx","dy"]]**2).sum(axis=1))
+    Vectors["Direction"] = trj_frame[["dx","dy"]].div(d, axis=0)
     
     return Vectors
         
@@ -96,48 +113,190 @@ def get_vertices_positions(NeighborPairs,spins):
     
     return NeighborPairs
 
+def ice_to_spins(ice, id_label=None):
+
+    if ice.__class__.__name__ == "colloidal_ice":
+        spins = colloidal_ice_vector(ice)
+    elif ice.__class__.__name__ == "spins":
+        spins = spin_ice_vector(ice)
+    elif ice.__class__.__name__ == "DataFrame":
+        spins = trj_ice_vector(ice)
+    elif ice.__class__.__name__ == "ndarray":
+        spins = ice
+    
+    return spins 
+
+def where_is_edge(e, edge_directory):
+    """ What vertex in the edge directory contains the edge 'e'. """
+    
+    vertices = [i for i in edge_directory if np.isin(e, edge_directory[i])]
+    
+    if len(vertices)==1:
+        vertices.append(-1)
+    if len(vertices)!=2:
+        print(vertices)
+        raise ValueError("edges can only join two vertices")
+        
+    return vertices
+
+def update_edge_directions(edges, spins, positions):
+    """ Map the 'spins' to the edge directions in 'edges'. """
+
+
+    for i,e in tqdm.tqdm(edges.iterrows(), len(edges)):
+
+        spin_direction = spins["Direction"][e.name]
+
+        if (e<0).any():
+            # This happens when a single vertex is assigned to an edge 
+            vertex = e[e>=0]
+            if vertex.index[0]=="start":
+                vertex_join = spins["Center"][e.name]-positions[vertex[0]]
+            elif vertex.index[0]=="end":
+                vertex_join = positions[vertex[0]]-spins["Center"][e.name]
+
+        else:
+            vertex_join = positions[e["end"]]-positions[e["start"]]
+
+        if np.dot(spin_direction,vertex_join)<0:
+            ## flip edge
+            e[["start","end"]] = e[["end","start"]]
+
+    return edges
+
+def create_edge_array(edge_directory, spins = None, positions = None):
+    """ Retrieve the edge array from the edge_directory. 
+    If spins and positions are given they are used to calculate the directions of the edges. 
+    """
+
+    edge_ids = np.unique(np.array([e for v in edge_directory for e in tqdm.tqdm(edge_directory[v])]))
+    
+    edges = np.array([[e,*where_is_edge(e, edge_directory)] 
+                      for e in progress_func(edge_ids)])
+    
+    edges = pd.DataFrame(data = edges[:,1:],
+                         columns=["start","end"],
+                         index=pd.Index(edges[:,0],name="edge"))
+    
+    if spins is not None and positions is not None:
+        edges = update_edge_directions(edges,spins,positions)
+    
+    return edges
+        
 class vertices():
-    def __init__(self, colloidal_ice = None, spin_ice = None, trj = None, id_label = "id", static = True):
+    def __init__(self, positions = None, edges = None, ice = None, id_label = "id", static = True, ):
         """ Initializes the vertices array.
-        Initialization method for the vertex class. If an object is given to create a vertex array, do so. 
+        Initialization method for the vertices class. 
+        Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using "colloids_to_vertices", "spins_to_vertices", or "trj_to_vertices". 
+        If an object is given to create a vertex array, do so. 
         ---------
         Parameters:
-        * colloidal_ice (colloidal_ice object, optional): Initalizes the vertices from a colloidal_ice object
-        * spin_ice (spin_ice object, optional): Initializes the vertices from a spin_ice object
-        * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. 
+        * positions: Ordered list containing the geometry of the vertices.
+        * edges: Ordered list, or disordered set, containing the pairs of vertices that are joined. 
+        * ice (colloidal_ice object, trj dataframe, spin_ice object): Initializes the topology, inferring from the input. 
+            * colloidal_ice (colloidal_ice object, optional): Initalizes the vertices from a colloidal_ice object
+            * spin_ice (spin_ice object, optional): Initializes the vertices from a spin_ice object
+            * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. 
         * id_label (string, optional): If the index of `trj` has more than one level, this is the name of the level that identifies particles. Defaults to "id".
-        * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.
+        * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex. False is not implemented
+        
+        Attributes: 
+        * vertices (DataFrame): contains the possitions of the vertices, plus whatever properties have been calculated. 
+        * edges (DataFrame): contains the pairs of vertices that are connected. The edges are directed and go from the first vertex to the second vertex. 
+        * edge_directory (dict): indicates which vertices are formed by which edges. The index is the edge number. Each entry contains a list of vertices.
         """
-        self.array=np.array([],
-                      dtype=[
-                          ('Location', float,(2,)),
-                          ('id',int),
-                          ('Coordination',int),
-                          ('Charge',int),
-                          ('Dipole',float,(2,))])
-                          
-        if colloidal_ice is not None:
-            self.colloids_to_vertices(colloidal_ice)
-
-        elif spin_ice is not None:
-            self.spins_to_vertices(spin_ice)
+        
+        self.vertices = pd.DataFrame({"x":[],"y":[]},
+                            index = pd.Index([],name="vertex"))
+        self.edges = pd.DataFrame({"start":[],"end":[]},
+                             index = pd.Index([],name="edge"))
+        self.edge_directory = {}
             
-        elif trj is not None:
-            self.trj_to_vertices(trj, id_label)
-        
-    def colloids_to_vertices(self,C):
+        if positions is not None:
+            self.vertices.x = positions[:,0]
+            self.vertices.y = positions[:,1]
+            
+        if edges is not None:
+            self.edges.start = edges[:,0]
+            self.edges.end = edges[:,1]
+                        
+    def infer_topology(self, ice, positions=None, method = "crossings", tolerance = 0.01):
+        """ Infer the topology from the spin structure.
+        ------------
+        Parameters:
+        input: object to get the spins from. 
+        positions (optional): 
+        method (string, "crossings"): Method to infer the positions of the vertices. 
+            * "crossings" defines vertices as being in the crossing points of two spins. This is illdefined in more than 2D. 
+            * "voronoi" defines vertices as being in the corners of the voronoi tesselation of  
+        """
+        spins = ice_to_spins(ice)
 
-        self.spins = colloidal_ice_vector(C)
+        neighbor_pairs = calculate_neighbor_pairs(spins['Center'])
+        neighbor_pairs = from_neighbors_get_nearest_neighbors(neighbor_pairs)
+        neighbor_pairs = get_vertices_positions(neighbor_pairs,spins)
         
-        return self.classify_vertices()
+        positions, inverse, copies = unique_points(neighbor_pairs['Vertex'])
+        self.vertices.x = positions[:,0]
+        self.vertices.y = positions[:,1]
         
-    def spins_to_vertices(self,sp):
+        self.edge_directory = {i:np.unique(neighbor_pairs[c]["Pair"].flatten()) 
+                                for i,c in enumerate(copies)}
 
-        self.spins = spin_ice_vector(sp)
+        self.edges = create_edge_array(self.edge_directory, spins, positions)   
+    
+    def update_directions(self, ice):
+        """ Updates the directions of the vertices using an ice object """
         
-        return self.classify_vertices()
+        positions = self.vertices.loc[:,["x","y"]].values
+        spins = ice_to_spins(ice)
         
-    def trj_to_vertices(self,trj,id_label = None, static = True):
+        self.edges = update_edge_directions(self.edges, spins, positions)
+        
+    def calculate_coordination(self):
+        """ Adds a column to the 'vertices' array with the vertex coordination """
+        coordination = [len(self.edge_directory[vertex]) for vertex in self.vertices.index]
+        self.vertices["coordination"] = coordination
+         
+    def calculate_charge(self):
+        """ Adds a column to the 'vertices' array with the vertex charge. """
+        
+        self.vertices["charge"] = 0
+
+        for v_id, vertex in self.vertices.iterrows():
+            indegree = (self.edges.loc[self.edge_directory[v_id]].end==v_id).sum()
+            outdegree = (self.edges.loc[self.edge_directory[v_id]].start==v_id).sum()
+            self.vertices.loc[v_id,"charge"] = indegree-outdegree
+    
+    def calculate_dipole(self, spins):
+        """ Adds two column sto the 'vertices' array with the sum of the directions of the vertex components. """
+    
+        self.vertices["dx"] = 0
+        self.vertices["dy"] = 0
+
+        for v_id, vertex in self.vertices.iterrows():
+            self.vertices.loc[v_id,["dx","dy"]] = np.sum(np.array(
+                        [spins["Direction"][e] for e in self.edge_directory[v_id]]),
+                    axis=0)
+            
+    def classify_vertices(self, spins):
+        
+        self.calculate_coordination()
+        self.calculate_charge()
+        self.calculate_dipole(spins)
+         
+        return self
+
+    def colloids_to_vertices(self, col):
+        """ Uses the col object to infer the topology of the vertices and to classify them."""
+        
+        spins = ice_to_spins(col)
+        self.infer_topology(spins)
+        self.classify_vertices(spins)
+        
+        return self
+    
+    def trj_to_vertices(self, trj, positions = None, id_label = None, static = True):
         """ Convert a trj into a vertex array. 
         If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers. 
         ---------
@@ -146,122 +305,314 @@ class vertices():
         * id_label (string, "id"): If the index of `trj` has more than one level, this is the name of the level that identifies particles.
         * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.
         """
-        
+                
+        def trj_to_vertices_single_frame(trj_frame):
+            
+            spins = ice_to_spins(trj_frame)
+            
+            if len(self.vertices)==0:
+                self.infer_topology(spins, positions=positions)
+            else: 
+                self.update_directions(spins) 
+                
+            self.classify_vertices(spins)
+            
+            return self.vertices
+            
         if trj.index.nlevels==1:
-            self.spins = trj_ice_vector(trj)
-            return self.classify_vertices()
+                        
+            trj_to_vertices_single_frame(trj)
+            
+            return self
+            
         else:
-            def classify_vertices_single_frame(trj_frame):
-                self.spins = trj_ice_vector(trj_frame)
-                self.classify_vertices()
-                return self.DataFrame()
                 
             id_i = np.where([n=="id" for n in trj.index.names])
             other_i = list(trj.index.names)
             other_i.remove(other_i[id_i[0][0]])
             
-            self.dynamic_array = trj.groupby(other_i).classify_vertices_single_frame()
+            self.dynamic_array = trj.groupby(other_i).apply(trj_to_vertices_single_frame)
+            self.vertices = self.dynamic_array
+            
             return self
-            
     
-    def classify_vertices(self):
+    def display(self, ax = None, DspCoord = False, dpl_scale = 1, dpl_width = 5, sl=None):
         
-        NeighborPairs = calculate_neighbor_pairs(self.spins['Center'])
+        
+        if self.vertices.index.nlevels>1:
+            if sl is None:
+                sl = self.vertices.index[-1][:-1]
+            sl = sl+(slice(None),)
+        else: 
+            sl = slice(None)
+        
+        vertices = self.vertices.loc[sl]
 
-        NeighborPairs = from_neighbors_get_nearest_neighbors(NeighborPairs)
-
-        NeighborPairs = get_vertices_positions(NeighborPairs,self.spins)
-        
-        v = unique_points(NeighborPairs['Vertex'])
-        
-        ## Make Vertex array
-        self.array=np.array(np.empty(np.shape(v)[0]),
-                            dtype=[
-                                ('Location', float,(2,)),
-                                ('id',int),
-                                ('Coordination',int),
-                                ('Charge',int),
-                                ('Dipole',float,(2,))])
-        
-        self.array['Location'] = v
-        
-        ## Make Neighbors directory
-        self.neighbors = {}
-
-        for i,v in enumerate(self.array):
-            v['id']=i
-            self.neighbors[i] = []
-            for n in NeighborPairs:
-                if sptl.distance.euclidean(n['Vertex'],v['Location'])<np.mean(n['Vertex']*1e-6):
-                    self.neighbors[i]=self.neighbors[i]+list(n['Pair'])
-            self.neighbors[i] = set(self.neighbors[i])
-            
-            ## Calculate Coordination
-            v['Coordination'] = len(self.neighbors[i])
-        
-            ## Calculate Charge and Dipole
-            v['Charge'] = 0
-            v['Dipole'] = [0,0]
-               
-            for n in self.neighbors[v['id']]:
-                v['Charge']=v['Charge'] + np.sign(np.sum((v['Location']-self.spins[n]['Center'])*self.spins[n]['Direction']))
-
-                v['Dipole']=v['Dipole'] + self.spins[n]['Direction']
-         
-        return self
-
-    
-    def DataFrame(self):
-        
-        vert_pd = pd.DataFrame(data = self.array["Coordination"],
-                            index = self.array["id"],
-                            columns = ["Coordination"])
-    
-        vert_pd["Charge"] = self.array["Charge"]
-        vert_pd["DipoleX"] = self.array["Dipole"][:,0]
-        vert_pd["DipoleY"] = self.array["Dipole"][:,1]
-
-        vert_pd["LocationX"] = self.array["Location"][:,0]
-        vert_pd["LocationY"] = self.array["Location"][:,1]
-
-        vert_pd.index.name = "id"
-    
-        return vert_pd    
-        
-    def display(self,ax = False,DspCoord = False,dpl_scale = 1, dpl_width = 5):
-                
-        if not ax:
-            fig1, ax = plt.subplots(1,1)  
+        if ax is None:
+            ax = plt.gca()
 
         if not DspCoord:
-            for v in self.array:
-                if v['Charge']>0:
+            for i,v in vertices.iterrows():
+                if v.charge>0:
                     c = 'r'
                 else:
                     c = 'b'
-                ax.add_patch(patches.Circle(
-                    (v['Location'][0],v['Location'][1]),radius = abs(v['Charge'])*2,
+                ax.add_patch(patches.Circle((v.x,v.y),radius = abs(v['charge'])*2,
                     ec='none', fc=c))
-                X = v['Location'][0]
-                Y = v['Location'][1]
-                if v['Charge']==0:
-                    DX = v['Dipole'][0]*dpl_scale
-                    DY = v['Dipole'][1]*dpl_scale
+
+                if v.charge==0:
+                    X = v.x
+                    Y = v.y
+                    
+                    DX = v['dx']*dpl_scale
+                    DY = v['dy']*dpl_scale
                     ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=dpl_width,fc='k'))
                 
         if DspCoord: 
-            for v in self.array:
-                if v['Charge']>0:
+            for v in vertices.iterrows:
+                if v['charge']>0:
                     c = 'r'
                 else:
                     c = 'b'
                     
-                ax.add_patch(patches.Circle(
-                    (v['Location'][0],v['Location'][1]),radius = abs(v['Coordination'])*2,
+                ax.add_patch(patches.Circle((v.x,v.y),radius = abs(v['charge'])*2,
                     ec='none', fc=c))
-                X = v['Location'][0]
-                Y = v['Location'][1]
+                    
+                X = v.x
+                Y = v.y
         
         #ax.set_aspect("equal")    
         #plt.axis("equal")
 
+#### Graph Class Definition ####
+class graph():
+    def __init__(self):
+
+        self.edges = []
+        self.vertices = []
+        self.edge_directory = {}
+
+    def __str__(self):
+        return "Graph object with %u vertices and %u edges"%(len(self.vertices),len(self.edges))
+
+    def display(self, ax = None, decimation = None):
+        if ax is None:
+            ax = plt.gca()
+
+        ax.plot(self.vertices.x,self.vertices.y,'o')
+        
+        if decimation is not None:
+            ax.plot(self.vertices.loc[decimation.values.flatten()].x,
+                        self.vertices.loc[decimation.values.flatten()].y, '.')
+            
+
+        centers, directions = self.spins()
+
+        v_points  = np.concatenate(
+        [ centers-directions/2,
+        centers+directions/2 ],axis=1)
+
+        ax.plot(v_points[:,[0,3]].transpose(),v_points[:,[1,4]].transpose(),color="k")
+
+        ax.set_aspect("equal")
+
+    def spins_to_graph(self, spins, periodic = False, region = None):
+        """returns a database of spins, a database of vertices and member directories both ways"""
+
+        # Create a database of spins
+        centers = np.array([s.center.magnitude for s in spins])
+        directions = np.array([s.direction.magnitude for s in spins])
+
+        sp_array = pd.concat([
+            pd.DataFrame(data = centers, columns = ["x","y","z"]),
+            pd.DataFrame(data = directions, columns = ["dx","dy","dz"])], axis = 1)
+        sp_array.index.name = "id"
+        sp_array.head()
+
+        # Create two vertices for each spin
+        vert = pd.concat([
+            sp_array[["x","y","z"]]+sp_array[["dx","dy","dz"]].values/2,
+            sp_array[["x","y","z"]]-sp_array[["dx","dy","dz"]].values/2])
+        vert["sp_id"] = vert.index
+        vert.index = range(len(vert))
+        vert.index.name = "v_id"
+
+        # Generate a unique array of vertices
+        vert = np.round(vert*1e6)*1e-6
+
+        if periodic:
+            vert[["x","y","z"]] = np.mod(vert[["x","y","z"]],region)
+            vert = np.round(vert*1e6)*1e-6
+
+            self.periodic=True
+            self.region = region
+
+        v, ind, invind = np.unique(vert[["x","y","z"]].values, axis = 0, return_index = True, return_inverse = True)
+        vert_un = pd.DataFrame(data = v, columns = ["x","y","z"], index = range(len(ind)))
+        vert_un.index.name = "v_id"
+        vert_un = vert_un.sort_index()
+
+        # Directory of edges that point to or from a vertex.
+        sp_id = {}
+
+        for i,v in vert_un.iterrows():
+            sp_id[i] = list(vert.loc[np.where(invind==i)[0]].sp_id.values)
+
+        # Directory of vertices that edges point to.
+
+        v_id = {}
+        for i,sp in sp_array.iterrows():
+            v_id[i] = invind[vert[vert.sp_id==i].index]
+
+        self.vertices = vert_un
+        self.edges = pd.DataFrame(data = v_id, index=["v_1","v_2"]).transpose()
+        self.edges.index.name="e_id"
+
+        self.edge_directory = sp_id
+
+        return self
+
+    def decimation(self,rm_edges):
+        """ Remove an edge """
+        self.latest = "decimation"
+        self.edge_dec = self.edges.loc[[rand.choice(self.edges.index)]]
+
+        edge = self.edge_dec
+        self.edges = self.edges.drop(edge.index)
+
+        self.edge_directory[edge["v_1"].values[0]].remove(edge.index)
+        self.edge_directory[edge["v_2"].values[0]].remove(edge.index)
+
+        rm_edges = rm_edges.append(edge)
+
+        return rm_edges
+    
+    def undo_decimation(self,rm_edges):
+        """ Replace the last edge that was removed (it shoud be the last in the list)"""
+        
+        if len(rm_edges)>0:
+        
+            edge = self.edge_dec
+            self.edge_dec = None
+            self.edges = self.edges.append(edge)
+
+            self.edge_directory[edge["v_1"].values[0]].append(edge.index.values[0])
+            self.edge_directory[edge["v_2"].values[0]].append(edge.index.values[0])
+
+            rm_edges = rm_edges.drop(edge.index)
+            
+        return rm_edges
+        
+    def permutation(self,rm_edges):
+        """ Remove a random edge and place it elsewhere"""
+        self.latest = "permutation"
+
+        if len(rm_edges)>0:
+
+            self.edge_permute = [self.edges.loc[[rand.choice(self.edges.index)]], rm_edges.loc[[rand.choice(rm_edges.index)]]]
+            edge_out = self.edge_permute[0]
+            edge_in = self.edge_permute[1]
+
+            self.edges = self.edges.append(edge_in)
+            self.edges = self.edges.drop(edge_out.index)
+
+            self.edge_directory[edge_out["v_1"].values[0]].remove(edge_out.index)
+            self.edge_directory[edge_out["v_2"].values[0]].remove(edge_out.index)
+
+            self.edge_directory[edge_in["v_1"].values[0]].append(edge_in.index.values[0])
+            self.edge_directory[edge_in["v_2"].values[0]].append(edge_in.index.values[0])
+
+            rm_edges = rm_edges.drop(edge_in.index)
+            rm_edges = rm_edges.append(edge_out)
+
+        return rm_edges
+
+    def undo_permutation(self,rm_edges):
+        """ undo the latest permutation"""
+
+        if len(rm_edges)>0:
+
+            edge_out = self.edge_permute[1]
+            edge_in = self.edge_permute[0]
+            
+            self.edge_permute = None
+
+            self.edges = self.edges.append(edge_in)
+            self.edges = self.edges.drop(edge_out.index)
+
+            self.edge_directory[edge_out["v_1"].values[0]].remove(edge_out.index)
+            self.edge_directory[edge_out["v_2"].values[0]].remove(edge_out.index)
+
+            self.edge_directory[edge_in["v_1"].values[0]].append(edge_in.index.values[0])
+            self.edge_directory[edge_in["v_2"].values[0]].append(edge_in.index.values[0])
+
+            rm_edges = rm_edges.drop(edge_in.index)
+            rm_edges = rm_edges.append(edge_out)
+
+        return rm_edges
+        
+    def refilling(self,rm_edges):
+        """ Replace an edge from the list rm_edges"""
+        self.latest = "refilling"
+        
+        if len(rm_edges)>0:
+            
+            self.edge_refill = rm_edges.loc[[rand.choice(rm_edges.index)]]
+            edge = self.edge_refill
+            self.edges = self.edges.append(edge)
+
+            self.edge_directory[edge["v_1"].values[0]].append(edge.index.values[0])
+            self.edge_directory[edge["v_2"].values[0]].append(edge.index.values[0])
+
+            rm_edges = rm_edges.drop(edge.index)
+
+        return rm_edges
+    
+    def undo_refilling(self, rm_edges):
+        """ remove the last link which was replaced """
+        
+        edge = self.edge_refill
+        self.edge_refill = None
+        
+        self.edges = self.edges.drop(edge.index)
+
+        self.edge_directory[edge["v_1"].values[0]].remove(edge.index)
+        self.edge_directory[edge["v_2"].values[0]].remove(edge.index)
+
+        rm_edges = rm_edges.append(edge)
+
+        return rm_edges
+        
+    def undo(self, rm_edges):
+        if self.latest == "decimation":
+            return self.undo_decimation(rm_edges)
+        if self.latest == "permutation":
+            return self.undo_permutation(rm_edges)
+        if self.latest == "refilling":
+            return self.undo_refilling(rm_edges)
+            
+    def copy(self, deep=True):
+        if deep:
+            return cp.deepcopy(self)
+        else:
+            return cp.copy(self)
+
+    def spins(self, units = 1):
+
+        centers = (self.vertices.loc[self.edges.v_1,["x","y","z"]].values+self.vertices.loc[self.edges.v_2,["x","y","z"]].values)/2
+        directions = (self.vertices.loc[self.edges.v_1,["x","y","z"]].values-self.vertices.loc[self.edges.v_2,["x","y","z"]].values)
+
+        if self.periodic:
+
+            fwloop = directions-self.region
+            bwloop = directions+self.region
+
+            cnreg = self.region
+            cnreg[np.isinf(cnreg)] = 0
+            ctloop = centers + cnreg/2
+            centers[abs(directions)>self.region/2] = ctloop[abs(directions)>self.region/2]
+            centers[directions<-self.region/2] = ctloop[directions<-self.region/2]
+            directions[directions>self.region/2] = fwloop[directions>self.region/2]
+            directions[directions<-self.region/2] = bwloop[directions<-self.region/2]
+
+        return centers*units, directions*units

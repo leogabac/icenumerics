@@ -5,23 +5,29 @@ The `icenumerics` API
 The `spins` class
 ======================
 
-.. automodule:: icenumerics.spins
-	:members:
+.. autoclass:: icenumerics.spin
+.. autoclass:: icenumerics.spins
 	 
 The `colloidal_ice` class
 ==========================
 
-.. automodule:: icenumerics.colloidalice
-	:members:
+.. autoclass:: icenumerics.colloid_in_trap
+.. autoclass:: icenumerics.colloidal_ice
 	
 The `vertices` class
 =====================
-.. automodule:: icenumerics.vertices
-	:members:
+.. autoclass:: icenumerics.vertices
 	
 Parameters classes
 ===================
 
-.. automodule:: icenumerics.parameters
-	:members:
+.. autoclass:: icenumerics.trap
+.. autoclass:: icenumerics.particle
+.. autoclass:: icenumerics.world
+	
+Support Functions
+==================
+
+.. automodule:: icenumerics
+	:members: get_ice_trj, unwrap_trj 
 	

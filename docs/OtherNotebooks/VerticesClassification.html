@@ -1,0 +1,746 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Vertex Classification &#8212; icenumerics v0.1.9 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Forces in the simulation" href="ForcesOfTheSimulation.html" />
+    <link rel="prev" title="Read colloidal ice from simulation or experimental data" href="ReadingColloidsFromSimulation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container,
+div.nbinput.container div.prompt,
+div.nbinput.container div.input_area,
+div.nbinput.container div[class*=highlight],
+div.nbinput.container div[class*=highlight] pre,
+div.nboutput.container,
+div.nboutput.container div.prompt,
+div.nboutput.container div.output_area,
+div.nboutput.container div[class*=highlight],
+div.nboutput.container div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    min-width: 5.5ex;
+    padding-top: 0.3rem;
+    padding-right: 0.3rem;
+    text-align: right;
+    flex: 0;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    background: #f5f5f5;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 0.3rem;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<div class="section" id="Vertex-Classification">
+<h1>Vertex Classification<a class="headerlink" href="#Vertex-Classification" title="Permalink to this headline">¶</a></h1>
+<p>The most common type of analysis that we want to do with a colloidal ice system is to map it to a system of vertices, for which we can then classify and count types of vertices.</p>
+<p>A system of vertices is a directed network. A vertex geometry is a set of points <span class="math notranslate nohighlight">\(\mathbf{v}_i \in \mathbb{V}\)</span> which define the vertex locations in 3D space. The topology of the vertices is defined by their connectivity; two vertices, <span class="math notranslate nohighlight">\(v_i\)</span> and <span class="math notranslate nohighlight">\(v_j\)</span> are connected if they are joined by an edge <span class="math notranslate nohighlight">\(\mathbf{e}_{ij} = \left(v_i, v_j\right)\)</span>, and the set of all edges is <span class="math notranslate nohighlight">\(\mathbb{E}\)</span>. The vertex network is directed, which means that the edge
+<span class="math notranslate nohighlight">\(\mathbf{e}_{ij} \neq \mathbf{e}_{ji}\)</span>.</p>
+<p>The mapping from a colloidal ice consists on assigning an edge to each trap. An edge’s direction goes from the vertex with a hole to the vertex with a particle.</p>
+<p>A vertex object ‘v’ should be able to guess the vertex geometry and topology that maps a colloidal ice object ‘col’ for simple systems by writing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>However, some assistance on this guessing could be useful. For example: * A set of points containing the vertex positions * A topology, codified as a list of edges forming a vertex.</p>
+<p>The vertices object should also keep its topology stored internally. Obtaining the vertex classification for a new frame should be an update, and not a processing from scratch. This means that the processing might not work for dynamic systems where vertices move, or topologies change. That’s fine, we can’t even do that in simulation yet for most systems.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># This only adds the package to the path.</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;../../&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">icenumerics</span> <span class="k">as</span> <span class="nn">ice</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+
+<span class="o">%</span><span class="k">load_ext</span> autoreload
+<span class="o">%</span><span class="k">autoreload</span> 2
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="k">as</span> <span class="nn">spa</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="We-first-create-a-colloidal-ice-to-play-around-with">
+<h2>We first create a colloidal ice to play around with<a class="headerlink" href="#We-first-create-a-colloidal-ice-to-play-around-with" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ureg</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">ureg</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sp</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">spins</span><span class="p">()</span>
+<span class="n">sp</span><span class="o">.</span><span class="n">create_lattice</span><span class="p">(</span><span class="s2">&quot;square&quot;</span><span class="p">,[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span><span class="n">lattice_constant</span><span class="o">=</span><span class="mi">30</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;closed spin&quot;</span><span class="p">)</span>
+
+<span class="n">particle</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">particle</span><span class="p">(</span><span class="n">radius</span> <span class="o">=</span> <span class="mf">5.15</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">,</span>
+             <span class="n">susceptibility</span> <span class="o">=</span> <span class="mf">0.0576</span><span class="p">,</span>
+             <span class="n">diffusion</span> <span class="o">=</span> <span class="mf">0.125</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+             <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+             <span class="n">density</span> <span class="o">=</span> <span class="mi">1000</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">trap</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">trap</span><span class="p">(</span><span class="n">trap_sep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">,</span>
+               <span class="n">height</span> <span class="o">=</span> <span class="mi">80</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">pN</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span>
+               <span class="n">stiffness</span> <span class="o">=</span> <span class="mf">6e-4</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">pN</span><span class="o">/</span><span class="n">ureg</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span>
+
+<span class="n">col</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">colloidal_ice</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">particle</span><span class="p">,</span> <span class="n">trap</span><span class="p">,</span> <span class="n">height_spread</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">susceptibility_spread</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">pad_region</span><span class="p">(</span><span class="mi">30</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Vertices should work if I calculate them here, before the colloidal_ice has a trj object.</p></li>
+<li><p>Maybe the colloidal_ice object should keep a trj dataframe to begin with.</p></li>
+<li><p>Also, it occurs to me that the standard trj object stored by colloidal ice shouldn’t be directly read from the lammpstrj, but instead should be processed to a trj object containing directions and colloids. This might be part of creating a <em>results</em> object.</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">world</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">world</span><span class="p">(</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">mT</span><span class="p">,</span>
+    <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+    <span class="n">dipole_cutoff</span> <span class="o">=</span> <span class="mi">200</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
+
+<span class="n">col</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">world</span><span class="p">,</span>
+             <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+             <span class="n">include_timestamp</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+             <span class="n">targetdir</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+             <span class="n">framerate</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+             <span class="n">timestep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+             <span class="n">run_time</span> <span class="o">=</span> <span class="mi">60</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+             <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">,</span><span class="s2">&quot;mux&quot;</span><span class="p">,</span><span class="s2">&quot;muy&quot;</span><span class="p">,</span><span class="s2">&quot;muz&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;icenumerics.magcolloids.magcolloids.parameters.particles object at 0x8195e14e0&gt;]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/OtherNotebooks_VerticesClassification_10_0.png" src="../_images/OtherNotebooks_VerticesClassification_10_0.png" />
+</div>
+</div>
+<div class="section" id="Create-a-‘vertex’-object-from-a-‘colloidal_ice’-object">
+<h3>Create a ‘vertex’ object from a ‘colloidal_ice’ object<a class="headerlink" href="#Create-a-‘vertex’-object-from-a-‘colloidal_ice’-object" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">v</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">vertices</span><span class="p">()</span>
+<span class="n">v</span><span class="o">.</span><span class="n">colloids_to_vertices</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;icenumerics.vertices.vertices at 0x81a202e10&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/OtherNotebooks_VerticesClassification_13_0.png" src="../_images/OtherNotebooks_VerticesClassification_13_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Create-a-vertex-structure-from-the-results-of-lammps.">
+<h3>Create a vertex structure from the results of lammps.<a class="headerlink" href="#Create-a-vertex-structure-from-the-results-of-lammps." title="Permalink to this headline">¶</a></h3>
+<p>We can get the vertex structure from a trajectory. To do this, the trajectory must be in the ‘ice’ format obtained by ‘get_ice_trj’:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">trj</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">get_ice_trj</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="p">,</span> <span class="n">bounds</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">bnd</span><span class="p">)</span>
+<span class="n">trj</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>type</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>dx</th>
+      <th>dy</th>
+      <th>dz</th>
+      <th>t</th>
+      <th>cx</th>
+      <th>cy</th>
+      <th>cz</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th>id</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="5" valign="top">0</th>
+      <th>1</th>
+      <td>2</td>
+      <td>15.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>10.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>45.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>10.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2</td>
+      <td>75.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>10.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2</td>
+      <td>105.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>10.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>2</td>
+      <td>135.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>10.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>Notice that in this format, the columns contain the directions and colloid positions of the traps.</p>
+<p>The ‘vertex’ class can process the results of a single frame, by giving it as an input a trajectory with a single index.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">v</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">vertices</span><span class="p">()</span>
+<span class="n">v</span><span class="o">.</span><span class="n">trj_to_vertices</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;icenumerics.vertices.vertices at 0x81958c6a0&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/OtherNotebooks_VerticesClassification_20_0.png" src="../_images/OtherNotebooks_VerticesClassification_20_0.png" />
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="Multiple-frames">
+<h2>Multiple frames<a class="headerlink" href="#Multiple-frames" title="Permalink to this headline">¶</a></h2>
+<p>If the ‘trj’ is a MultiIndex, the ‘trj_to_vertices’ method will iterate over all the indices which are not ‘id’, and calculate the vertex structure of all frames. However, it will only calculate the topology of the first frame.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%%time</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">vertices</span><span class="p">()</span>
+<span class="n">v</span><span class="o">.</span><span class="n">trj_to_vertices</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 5.81 s, sys: 58.6 ms, total: 5.87 s
+Wall time: 6.01 s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;icenumerics.vertices.vertices at 0x81b920358&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/OtherNotebooks_VerticesClassification_24_0.png" src="../_images/OtherNotebooks_VerticesClassification_24_0.png" />
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">icenumerics</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IceNumericsUsage.html">Usage instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Units.html">About units.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Pandas.html">The multiindex pandas array</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ReadingColloidsFromSimulation.html">Read colloidal ice from simulation or experimental data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Vertex Classification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#We-first-create-a-colloidal-ice-to-play-around-with">We first create a colloidal ice to play around with</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Multiple-frames">Multiple frames</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ForcesOfTheSimulation.html">Forces in the simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CalculateEnergy.html">Calculate Energy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CalculateEnergy.html#Calculate-the-energy-of-a-configuration.">Calculate the energy of a configuration.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API.html">The <cite>icenumerics</cite> API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="ReadingColloidsFromSimulation.html" title="previous chapter">Read colloidal ice from simulation or experimental data</a></li>
+      <li>Next: <a href="ForcesOfTheSimulation.html" title="next chapter">Forces in the simulation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Antonio Ortiz-Ambriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/OtherNotebooks/VerticesClassification.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

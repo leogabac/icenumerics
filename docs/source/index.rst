@@ -15,6 +15,7 @@ Welcome to icenumerics's documentation!
    Units
    Pandas
    OtherNotebooks/ReadingColloidsFromSimulation
+   OtherNotebooks/VerticesClassification
    OtherNotebooks/ForcesOfTheSimulation
    OtherNotebooks/CalculateEnergy
    API

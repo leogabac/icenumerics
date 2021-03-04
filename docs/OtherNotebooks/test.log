@@ -1,0 +1,172 @@
+units micro
+atom_style hybrid sphere paramagnet bond
+boundary s s p
+dimension 2
+neighbor 4.0 nsq
+pair_style hybrid lj/cut/dipole/cut 0 200
+bond_style biharmonic
+
+### ---Create Particles and Region--- ###
+read_data ./test.lmpdata
+  orthogonal box = (-30 -30 -0.02) to (330 330 0.02)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  440 atoms
+  scanning bonds ...
+  1 = max bonds/atom
+  reading bonds ...
+  220 bonds
+  1 = max # of 1-2 neighbors
+  0 = max # of 1-3 neighbors
+  0 = max # of 1-4 neighbors
+  1 = max # of special neighbors
+  special bonds CPU = 0.000225067 secs
+  read_data CPU = 0.00203896 secs
+group Atoms type 1
+220 atoms in group Atoms
+group Traps type 2
+220 atoms in group Traps
+mass * 1
+
+### ---Variables--- ###
+
+## magnetic field
+variable Bmag atom 2.6614538978577816e-05
+variable freq atom 0.0
+variable theta atom 0.0
+variable phi atom 0.0
+
+variable fieldx atom v_Bmag*cos(v_freq*time*2*PI+v_phi)*sin(v_theta)
+variable fieldy atom v_Bmag*sin(v_freq*time*2*PI+v_phi)*sin(v_theta)
+variable fieldz atom v_Bmag*cos(v_theta)
+
+### ---Fixes--- ###
+
+fix 	1 Atoms setdipole v_fieldx v_fieldy v_fieldz 0
+fix 	2 Atoms bd 300 0.001 913815
+
+fix     3 Atoms addforce 0 0 -0.0
+
+fix 	5 all enforce2d_bd
+
+### ---Run Commands--- ###
+timestep 	10000.0
+dump 	3 all custom 100 ./test.lammpstrj id type x	 y	 z	 mux	 muy	 muz
+thermo_style 	custom step atoms
+thermo 	100
+run 	6000
+Neighbor list info ...
+  update every 1 steps, delay 10 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 204
+  ghost atom cutoff = 204
+  3 neighbor lists, perpetual/occasional/extra = 3 0 0
+  (1) pair lj/cut/dipole/cut, perpetual, skip from (3)
+      attributes: half, newton on
+      pair build: skip
+      stencil: none
+      bin: none
+  (2) fix setdipole, perpetual
+      attributes: full, newton on
+      pair build: full/nsq
+      stencil: none
+      bin: none
+  (3) neighbor class addition, perpetual, half/full from (2)
+      attributes: half, newton on
+      pair build: halffull/newton
+      stencil: none
+      bin: none
+Per MPI rank memory allocation (min/avg/max) = 7.852 | 7.852 | 7.852 Mbytes
+Step Atoms 
+       0      440 
+     100      440 
+     200      440 
+     300      440 
+     400      440 
+     500      440 
+     600      440 
+     700      440 
+     800      440 
+     900      440 
+    1000      440 
+    1100      440 
+    1200      440 
+    1300      440 
+    1400      440 
+    1500      440 
+    1600      440 
+    1700      440 
+    1800      440 
+    1900      440 
+    2000      440 
+    2100      440 
+    2200      440 
+    2300      440 
+    2400      440 
+    2500      440 
+    2600      440 
+    2700      440 
+    2800      440 
+    2900      440 
+    3000      440 
+    3100      440 
+    3200      440 
+    3300      440 
+    3400      440 
+    3500      440 
+    3600      440 
+    3700      440 
+    3800      440 
+    3900      440 
+    4000      440 
+    4100      440 
+    4200      440 
+    4300      440 
+    4400      440 
+    4500      440 
+    4600      440 
+    4700      440 
+    4800      440 
+    4900      440 
+    5000      440 
+    5100      440 
+    5200      440 
+    5300      440 
+    5400      440 
+    5500      440 
+    5600      440 
+    5700      440 
+    5800      440 
+    5900      440 
+    6000      440 
+Loop time of 5.12892 on 1 procs for 6000 steps with 440 atoms
+
+Performance: 1010738899605778.125 ns/day, 0.000 hours/ns, 1169.837 timesteps/s
+92.6% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.6061     | 4.6061     | 4.6061     |   0.0 | 89.81
+Bond    | 0.063201   | 0.063201   | 0.063201   |   0.0 |  1.23
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.0023937  | 0.0023937  | 0.0023937  |   0.0 |  0.05
+Output  | 0.04041    | 0.04041    | 0.04041    |   0.0 |  0.79
+Modify  | 0.40251    | 0.40251    | 0.40251    |   0.0 |  7.85
+Other   |            | 0.01431    |            |       |  0.28
+
+Nlocal:    440 ave 440 max 440 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    0 ave 0 max 0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    16510 ave 16510 max 16510 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:  33020 ave 33020 max 33020 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 33020
+Ave neighs/atom = 75.0455
+Ave special neighs/atom = 1
+Neighbor list builds = 0
+Dangerous builds = 0
+Total wall time: 0:00:05

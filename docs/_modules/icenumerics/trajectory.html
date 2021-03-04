@@ -1,0 +1,262 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>icenumerics.trajectory &#8212; icenumerics v0.1.9 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icenumerics.trajectory</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">icenumerics.spins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icenumerics.colloidalice</span> <span class="kn">import</span> <span class="n">colloidal_ice</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="k">as</span> <span class="nn">sptl</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<div class="viewcode-block" id="unwrap_trj"><a class="viewcode-back" href="../../API.html#icenumerics.unwrap_trj">[docs]</a><span class="k">def</span> <span class="nf">unwrap_trj</span><span class="p">(</span><span class="n">trj</span><span class="p">,</span><span class="n">bounds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Unwraps trj around periodic boundaries&quot;&quot;&quot;</span>
+    <span class="n">trj2</span> <span class="o">=</span> <span class="n">trj</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">unwrap</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">trj</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">trj2</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">trj2</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="s2">&quot;_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="s2">&quot;_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="s2">&quot;_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="n">trj2</span> <span class="o">=</span> <span class="p">(</span><span class="n">trj2</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">unwrap</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">trj</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">trj2</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">trj2</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="s2">&quot;_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="s2">&quot;_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">+</span> <span class="n">bounds</span><span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="s2">&quot;_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="k">return</span> <span class="n">trj2</span></div>
+
+<span class="k">def</span> <span class="nf">unwrap_frame</span><span class="p">(</span><span class="n">col_trj</span><span class="p">,</span><span class="n">bnd</span><span class="p">,</span><span class="n">axis</span><span class="p">):</span>
+    <span class="n">box_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">bnd</span><span class="p">[</span><span class="n">axis</span><span class="o">+</span><span class="s2">&quot;_max&quot;</span><span class="p">]</span><span class="o">-</span><span class="n">bnd</span><span class="p">[</span><span class="n">axis</span><span class="o">+</span><span class="s2">&quot;_min&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">col_trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;c&quot;</span><span class="o">+</span><span class="n">axis</span><span class="p">]</span><span class="o">&gt;</span><span class="n">box_size</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">col_trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span><span class="s2">&quot;c&quot;</span><span class="o">+</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span><span class="s2">&quot;c&quot;</span><span class="o">+</span><span class="n">axis</span><span class="p">]</span><span class="o">-</span><span class="n">box_size</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">col_trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;c&quot;</span><span class="o">+</span><span class="n">axis</span><span class="p">]</span><span class="o">&lt;-</span><span class="n">box_size</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">col_trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span><span class="s2">&quot;c&quot;</span><span class="o">+</span><span class="n">axis</span><span class="p">]</span><span class="o">=</span> <span class="n">col_trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span><span class="s2">&quot;c&quot;</span><span class="o">+</span><span class="n">axis</span><span class="p">]</span><span class="o">+</span><span class="n">box_size</span>
+
+<div class="viewcode-block" id="get_ice_trj"><a class="viewcode-back" href="../../API.html#icenumerics.get_ice_trj">[docs]</a><span class="k">def</span> <span class="nf">get_ice_trj</span><span class="p">(</span><span class="n">trj</span><span class="p">,</span><span class="n">bounds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Converts lammps trj to ice trj&quot;&quot;&quot;</span>
+    <span class="c1"># in the trj dataframe, traps and atoms are labeled by different types</span>
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">trj</span><span class="p">[</span><span class="n">trj</span><span class="o">.</span><span class="n">type</span><span class="o">==</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mux&quot;</span><span class="p">:</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;muy&quot;</span><span class="p">:</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;muz&quot;</span><span class="p">:</span><span class="s2">&quot;dz&quot;</span><span class="p">})</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">trj</span><span class="p">[</span><span class="n">trj</span><span class="o">.</span><span class="n">type</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">unwrap_trj</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">filter</span><span class="p">([</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]),</span><span class="n">bounds</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">trj</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1">## The traps id are ordered (thankfully) in the same order as the particles, but they start consecutively.</span>
+    <span class="c1"># We keep this order but start at one.</span>
+    <span class="n">traps</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">traps</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;frame&quot;</span><span class="p">)</span>
+    <span class="n">traps</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traps</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">traps</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s2">&quot;frame&quot;</span><span class="p">,</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+
+    <span class="c1">## create a relative position vector. This goes from the center of the trap to the position of the particle</span>
+    <span class="n">colloids</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">-</span><span class="n">traps</span>
+    <span class="n">colloids</span> <span class="o">=</span> <span class="n">colloids</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span>
+    <span class="n">colloids</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span><span class="s2">&quot;cy&quot;</span><span class="p">,</span><span class="s2">&quot;cz&quot;</span><span class="p">]</span>
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">traps</span><span class="p">,</span><span class="n">colloids</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">colloids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1">## Flip those traps that are not pointing in the  direction of the colloids</span>
+    <span class="n">flip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">((</span><span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span><span class="s2">&quot;cy&quot;</span><span class="p">,</span><span class="s2">&quot;cz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="n">flip</span><span class="p">[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+    <span class="c1">## make the direction vector unitary</span>
+    <span class="n">mag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">((</span><span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="n">mag</span><span class="p">[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+    <span class="c1">#timestep = 10e-3 #sec</span>
+    <span class="c1">#traps[&quot;t&quot;] = traps.index.get_level_values(&quot;frame&quot;)*timestep</span>
+
+    <span class="k">return</span> <span class="n">traps</span></div>
+
+<span class="k">def</span> <span class="nf">get_ice_trj_single</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">i</span><span class="p">):</span>
+
+    <span class="n">lz_rd</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">lazy_read</span>
+    <span class="n">trj</span> <span class="o">=</span> <span class="n">lz_rd</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">trj</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;frame&quot;</span><span class="p">)</span><span class="o">*</span><span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">timestep</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;sec&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">bnd</span> <span class="o">=</span> <span class="n">lz_rd</span><span class="o">.</span><span class="n">get_bounds</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">trj</span><span class="p">[</span><span class="n">trj</span><span class="o">.</span><span class="n">type</span><span class="o">==</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mux&quot;</span><span class="p">:</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;muy&quot;</span><span class="p">:</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;muz&quot;</span><span class="p">:</span><span class="s2">&quot;dz&quot;</span><span class="p">})</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">trj</span><span class="p">[</span><span class="n">trj</span><span class="o">.</span><span class="n">type</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">moments</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">filter</span><span class="p">([</span><span class="s2">&quot;mux&quot;</span><span class="p">,</span> <span class="s2">&quot;muy&quot;</span><span class="p">,</span> <span class="s2">&quot;muz&quot;</span><span class="p">])</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">filter</span><span class="p">([</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">])</span>
+
+    <span class="n">traps</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">traps</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;frame&quot;</span><span class="p">)</span>
+    <span class="n">traps</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traps</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">traps</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">traps</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s2">&quot;frame&quot;</span><span class="p">,</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+
+    <span class="n">colloids</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">-</span><span class="n">traps</span>
+    <span class="n">colloids</span> <span class="o">=</span> <span class="n">colloids</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span>
+    <span class="n">colloids</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span><span class="s2">&quot;cy&quot;</span><span class="p">,</span><span class="s2">&quot;cz&quot;</span><span class="p">]</span>
+    <span class="n">traps</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">traps</span><span class="p">,</span><span class="n">colloids</span><span class="p">,</span> <span class="n">moments</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]:</span>
+        <span class="n">unwrap_frame</span><span class="p">(</span><span class="n">traps</span><span class="p">,</span><span class="n">bnd</span><span class="p">,</span><span class="n">ax</span><span class="p">)</span>
+
+    <span class="c1">## Flip those traps that are not pointing in the  direction of the colloids</span>
+    <span class="n">flip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">((</span><span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span><span class="s2">&quot;cy&quot;</span><span class="p">,</span><span class="s2">&quot;cz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="n">flip</span><span class="p">[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+    <span class="c1">## make the direction vector unitary</span>
+    <span class="n">mag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">((</span><span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">traps</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="n">mag</span><span class="p">[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">traps</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">),</span> <span class="n">bnd</span>
+
+<span class="k">def</span> <span class="nf">get_ice_trj_low_memory_hdf</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">tqdm.notebook</span> <span class="k">as</span> <span class="nn">tqdm</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">base_name</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
+    <span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">read_trj</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">lazy_read</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
+                                <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">lazy_read</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
+                                <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;Iterating through file&quot;</span><span class="p">,</span>
+                                <span class="n">leave</span> <span class="o">=</span> <span class="kc">False</span> <span class="p">):</span>
+
+        <span class="n">trj</span><span class="p">,</span> <span class="n">bnd</span> <span class="o">=</span> <span class="n">get_ice_trj_single</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="n">trj</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float16&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_hdf</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">dir_name</span><span class="p">,</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot;.h5&quot;</span><span class="p">),</span> <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;trj&quot;</span><span class="p">,</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span>
+            <span class="nb">format</span> <span class="o">=</span> <span class="s2">&quot;table&quot;</span><span class="p">,</span> <span class="n">append</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">bnd</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float16&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_hdf</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">dir_name</span><span class="p">,</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot;.h5&quot;</span><span class="p">),</span> <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;bounds&quot;</span><span class="p">,</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span>
+            <span class="nb">format</span> <span class="o">=</span> <span class="s2">&quot;table&quot;</span><span class="p">,</span> <span class="n">append</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
+
+<span class="k">def</span> <span class="nf">get_ice_trj_low_memory</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">tqdm.notebook</span> <span class="k">as</span> <span class="nn">tqdm</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">base_name</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;w&quot;</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">read_trj</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdms</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">lazy_read</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
+                                <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">lazy_read</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
+                                <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;Iterating through file&quot;</span> <span class="p">):</span>
+        <span class="n">get_ice_trj_single</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">dir_name</span><span class="p">,</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot;.trj&quot;</span><span class="p">),</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="n">header</span><span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">icenumerics</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../IceNumericsUsage.html">Usage instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Units.html">About units.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Pandas.html">The multiindex pandas array</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/ReadingColloidsFromSimulation.html">Read colloidal ice from simulation or experimental data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/VerticesClassification.html">Vertex Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/ForcesOfTheSimulation.html">Forces in the simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/CalculateEnergy.html">Calculate Energy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/CalculateEnergy.html#Calculate-the-energy-of-a-configuration.">Calculate the energy of a configuration.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../API.html">The <cite>icenumerics</cite> API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Antonio Ortiz-Ambriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

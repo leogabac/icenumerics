@@ -15,33 +15,30 @@ from . import mc
 
 class colloid_in_trap():
     """
-    An object ColloidInTrap represents a colloidal particle in a bistable trap. 
-    It has three main properties:
+    An object 'colloid_in_trap' represents a colloidal particle in a bistable trap. It has three main properties:
+    
     * center is the center of the bistable trap. 
-    * direction is a vector (whose magnitude is not important) that points from one stable
-        position to the other.
+    * direction is a vector (whose magnitude is not important) that points from one stable position to the other.
     * colloid is a vector that indicates where the colloid is placed with respect to the center.
     
     Each of these quantities are represented by lists of three elements, which correspond to 
-    vectors in R3 space. 
+    vectors in R3 space. A colloid_in_trap object also has the properties:
     
-    A colloid_in_trap object also has the properties:
     * colloid_properties:
         * susceptibility
         * diffusion
         * diameter
         * rel_density
         * volume
+    
     * trap_properties
         * trap_sep: The distance between the traps.
         * height
         * stiffness
         * spread
-    """
-    def __init__(self, 
-        center, direction, particle, trap):
-        """ initializes a colloid_in_trap object """
-        
+    """    
+    def __init__(self, center, direction, particle, trap):
+    
         self.center = np.array(center.magnitude,dtype="float")*center.units
         
         # Direction is always unitary
@@ -55,6 +52,7 @@ class colloid_in_trap():
         
     def __str__(self):
         """ Prints a string which represents the colloid_in_trap """
+        
         return("Colloid is in [%d %d %d], trap is [%d %d %d %d %d %d]\n" %\
                (tuple(self.colloid.magnitude)+tuple(self.center.magnitude)+tuple(self.direction)))
                
@@ -143,21 +141,17 @@ class colloid_in_trap():
         return cp
         
 class colloidal_ice(list):
-    """ 
-    The colloidal ice object is a list of colloid_in_trap objects.
-    It also includes some extra parameters contained in the worldparams attribute. 
-    It normally takes a spin ice object as input and generates one colloid_in_trap object for each spin
     """
-    def __init__(self,
-        arrangement,particle,trap,
-        height_spread = 0, susceptibility_spread = 0,
-        region = None, periodic = None):
-        """ 
-        The arrangement parameter defines the positions and directions of the colloidal ice. There are two possible inputs:
-            * a `spins` object: in this case the colloidal ice is copied from the spins arrangement. 
-            * a `dict` object: this `dict` object must contain two arrays, `center` and `direction`.
-        `particle` and `trap` are parameter containers created with the `particle` and `trap` generators. They can be a single object, or a list. If it is a list, it must coincide with the number of elements defined by the `arrangement` parameter.
-        """
+    The colloidal ice object is a list of colloid_in_trap objects. It also includes some extra parameters contained in the worldparams attribute. It normally takes a spin ice object as input and generates one colloid_in_trap object for each spin.
+    The arrangement parameter defines the positions and directions of the colloidal ice. There are two possible inputs:
+    
+        * a `spins` object: in this case the colloidal ice is copied from the spins arrangement. 
+        * a `dict` object: this `dict` object must contain two arrays, `center` and `direction`.
+    
+    `particle` and `trap` are parameter containers created with the `particle` and `trap` generators. They can be a single object, or a list. If it is a list, it must coincide with the number of elements defined by the `arrangement` parameter.
+    """
+    def __init__(self, arrangement, particle, trap, height_spread = 0, susceptibility_spread = 0, region = None, periodic = None):
+
         
         if arrangement.__class__.__name__ == "spins":
             centers = [s.center for s in arrangement]
@@ -195,7 +189,6 @@ class colloidal_ice(list):
             
         self.periodic = periodic
         
-                
     def display(self, ax = None, scale = 1):
                 
         if not ax:
@@ -211,7 +204,6 @@ class colloidal_ice(list):
          
         ax.set_aspect("equal")
            
-        
     def animate(self,sl=slice(0,-1,1),ax=None,speed = 1, verb=False):
         """ Animates a trajectory """
     
@@ -275,7 +267,7 @@ class colloidal_ice(list):
         if enforce2d:
             self.region[:,2] = np.array([-.02,.02])*ureg.um
             
-    def simulate(self, *args,**kargs):
+    def simulate(self, *args, **kargs):
         
         self.simulation(*args,**kargs)
         
@@ -283,15 +275,7 @@ class colloidal_ice(list):
         
         self.load_simulation()
     
-    def simulation(self, world, name,
-        targetdir = '',
-        include_timestamp = True,
-        run_time = 60*ureg.s,
-        framerate = 15*ureg.Hz,
-        timestep = 100*ureg.us,
-        output = ["x","y","z"],
-        processors = 1):
-        
+    def simulation(self, world, name, targetdir = '', include_timestamp = True, run_time = 60*ureg.s, framerate = 15*ureg.Hz, timestep = 100*ureg.us, output = ["x","y","z"], processors = 1):
         particles = [c.particle for c in self]
         traps = [c.trap for c in self]
 
@@ -378,10 +362,12 @@ class colloidal_ice(list):
         self.sim.run()
     
     def load_simulation(self, sl = slice(0,-1,1)):
+        """ Loads the results from a simulation from the .lammpstrj file."""
         self.trj = self.sim.load(read_trj = True, sl = sl)
+        self.bnd = self.sim.lazy_read.get_bounds(sl = sl)
         self.frames = self.trj.index.get_level_values("frame").unique()
         self.set_state_from_frame(frame = -1)
-        
+            
     def set_state_from_frame(self, frame):
         
         frame = self.frames[frame]

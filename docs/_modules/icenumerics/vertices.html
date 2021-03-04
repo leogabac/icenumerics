@@ -1,0 +1,731 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>icenumerics.vertices &#8212; icenumerics v0.1.9 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icenumerics.vertices</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">icenumerics.spins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icenumerics.colloidalice</span> <span class="kn">import</span> <span class="n">colloidal_ice</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="k">as</span> <span class="nn">sptl</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">import</span> <span class="nn">tqdm.notebook</span> <span class="k">as</span> <span class="nn">tqdm</span>
+
+<span class="k">def</span> <span class="nf">spin_crossing_point</span><span class="p">(</span><span class="n">S1</span><span class="p">,</span><span class="n">S2</span><span class="p">):</span>
+    <span class="c1"># This works well in 2d. In 3d it&#39;s triciker</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">A</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span>
+        <span class="n">A</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">lam</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">]))</span>
+
+<span class="k">def</span> <span class="nf">unique_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">tol</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns only the distinct points (with a tolerance).&quot;&quot;&quot;</span>
+    <span class="n">flatten</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">lst</span><span class="p">:</span> <span class="p">[</span><span class="n">el</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">l</span><span class="p">]</span>
+
+    <span class="n">unique_points</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">inverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint16&quot;</span><span class="p">)</span>
+    <span class="n">copies_assigned</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">flatten</span><span class="p">(</span><span class="n">copies_assigned</span><span class="p">)):</span>
+
+            <span class="n">kdt_points</span> <span class="o">=</span> <span class="n">spa</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+            <span class="n">same_point_copies</span> <span class="o">=</span> <span class="n">kdt_points</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span>
+
+            <span class="n">copies_assigned</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">same_point_copies</span><span class="p">)</span>
+            <span class="n">unique_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">same_point_copies</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">inverse</span><span class="p">[</span><span class="n">same_point_copies</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_points</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">unique_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unique_points</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">unique_points</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">copies_assigned</span>
+    
+<span class="k">def</span> <span class="nf">colloidal_ice_vector</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts an array of centers and directions from a Colloidal Ice System&quot;&quot;&quot;</span>
+    <span class="n">Vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">C</span><span class="p">)),</span><span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Center&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),(</span><span class="s1">&#39;Direction&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
+        <span class="n">Vectors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">direction</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">Vectors</span>
+    
+<span class="k">def</span> <span class="nf">spin_ice_vector</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts an array of centers and directions from a Spin Ice System&quot;&quot;&quot;</span>
+    <span class="n">Vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)),</span><span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Center&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),(</span><span class="s1">&#39;Direction&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">S</span><span class="p">:</span>
+        <span class="n">Vectors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="n">s</span><span class="o">.</span><span class="n">direction</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">Vectors</span>
+    
+<span class="k">def</span> <span class="nf">trj_ice_vector</span><span class="p">(</span><span class="n">trj_frame</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts an array of centers and directions from a frame in a trj&quot;&quot;&quot;</span>
+    
+    <span class="n">Vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trj_frame</span><span class="p">)),</span><span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Center&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),(</span><span class="s1">&#39;Direction&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+    <span class="n">Vectors</span><span class="p">[</span><span class="s2">&quot;Center&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trj_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">]]</span>
+    
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">trj_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">]]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">Vectors</span><span class="p">[</span><span class="s2">&quot;Direction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trj_frame</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">Vectors</span>
+        
+<span class="k">def</span> <span class="nf">calculate_neighbor_pairs</span><span class="p">(</span><span class="n">Centers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function makes a list of all the Pairs of Delaunay Neighbors from an array of points&quot;&quot;&quot;</span>
+    
+    <span class="n">tri</span> <span class="o">=</span> <span class="n">sptl</span><span class="o">.</span><span class="n">Delaunay</span><span class="p">(</span><span class="n">Centers</span><span class="p">)</span>
+
+    <span class="c1"># List all Delaunay neighbors in the system</span>
+    <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">tri</span><span class="o">.</span><span class="n">simplices</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Pair&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">,(</span><span class="mi">2</span><span class="p">,)),(</span><span class="s1">&#39;Distance&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),(</span><span class="s1">&#39;Vertex&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,(</span><span class="mi">2</span><span class="p">,))])</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tri</span><span class="o">.</span><span class="n">simplices</span><span class="p">:</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;Pair&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">euclidean</span><span class="p">(</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Pair&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sptl</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">euclidean</span><span class="p">(</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span><span class="n">Centers</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">NeighborPairs</span>
+
+<span class="k">def</span> <span class="nf">from_neighbors_get_nearest_neighbors</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">):</span>
+    <span class="c1"># This function takes a list of Delaunay Neighbor Pairs and returns only those which are close to the minimum distance.</span>
+    <span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">NeighborPairs</span> <span class="o">=</span> <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">[</span><span class="s1">&#39;Distance&#39;</span><span class="p">])</span><span class="o">*</span><span class="mf">1.1</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">NeighborPairs</span>
+
+<span class="k">def</span> <span class="nf">get_vertices_positions</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">,</span><span class="n">spins</span><span class="p">):</span>
+    <span class="c1"># From a list of Spins, get neighboring spins, and get the crossing point of each, which defines a vertex.  </span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">NeighborPairs</span><span class="p">):</span>
+        <span class="n">NeighborPairs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;Vertex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spin_crossing_point</span><span class="p">(</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Pair&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span><span class="n">spins</span><span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;Pair&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">NeighborPairs</span>
+
+<span class="k">def</span> <span class="nf">ice_to_spins</span><span class="p">(</span><span class="n">ice</span><span class="p">,</span> <span class="n">id_label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">ice</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;colloidal_ice&quot;</span><span class="p">:</span>
+        <span class="n">spins</span> <span class="o">=</span> <span class="n">colloidal_ice_vector</span><span class="p">(</span><span class="n">ice</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ice</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;spins&quot;</span><span class="p">:</span>
+        <span class="n">spins</span> <span class="o">=</span> <span class="n">spin_ice_vector</span><span class="p">(</span><span class="n">ice</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ice</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;DataFrame&quot;</span><span class="p">:</span>
+        <span class="n">spins</span> <span class="o">=</span> <span class="n">trj_ice_vector</span><span class="p">(</span><span class="n">ice</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ice</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;ndarray&quot;</span><span class="p">:</span>
+        <span class="n">spins</span> <span class="o">=</span> <span class="n">ice</span>
+    
+    <span class="k">return</span> <span class="n">spins</span> 
+
+<span class="k">def</span> <span class="nf">where_is_edge</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">edge_directory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; What vertex in the edge directory contains the edge &#39;e&#39;. &quot;&quot;&quot;</span>
+    
+    <span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">edge_directory</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">edge_directory</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">vertices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span><span class="o">!=</span><span class="mi">2</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;edges can only join two vertices&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">vertices</span>
+
+<span class="k">def</span> <span class="nf">update_edge_directions</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">spins</span><span class="p">,</span> <span class="n">positions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Map the &#39;spins&#39; to the edge directions in &#39;edges&#39;. &quot;&quot;&quot;</span>
+
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">e</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">edges</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)):</span>
+
+        <span class="n">spin_direction</span> <span class="o">=</span> <span class="n">spins</span><span class="p">[</span><span class="s2">&quot;Direction&quot;</span><span class="p">][</span><span class="n">e</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="c1"># This happens when a single vertex is assigned to an edge </span>
+            <span class="n">vertex</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">e</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">vertex</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;start&quot;</span><span class="p">:</span>
+                <span class="n">vertex_join</span> <span class="o">=</span> <span class="n">spins</span><span class="p">[</span><span class="s2">&quot;Center&quot;</span><span class="p">][</span><span class="n">e</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">-</span><span class="n">positions</span><span class="p">[</span><span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">elif</span> <span class="n">vertex</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;end&quot;</span><span class="p">:</span>
+                <span class="n">vertex_join</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">-</span><span class="n">spins</span><span class="p">[</span><span class="s2">&quot;Center&quot;</span><span class="p">][</span><span class="n">e</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vertex_join</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">]]</span><span class="o">-</span><span class="n">positions</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">spin_direction</span><span class="p">,</span><span class="n">vertex_join</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="c1">## flip edge</span>
+            <span class="n">e</span><span class="p">[[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span><span class="s2">&quot;end&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">e</span><span class="p">[[</span><span class="s2">&quot;end&quot;</span><span class="p">,</span><span class="s2">&quot;start&quot;</span><span class="p">]]</span>
+
+    <span class="k">return</span> <span class="n">edges</span>
+
+<span class="k">def</span> <span class="nf">create_edge_array</span><span class="p">(</span><span class="n">edge_directory</span><span class="p">,</span> <span class="n">spins</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Retrieve the edge array from the edge_directory. </span>
+<span class="sd">    If spins and positions are given they are used to calculate the directions of the edges. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">edge_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edge_directory</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">v</span><span class="p">])]))</span>
+    
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">e</span><span class="p">,</span><span class="o">*</span><span class="n">where_is_edge</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">edge_directory</span><span class="p">)]</span> 
+                      <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">progress_func</span><span class="p">(</span><span class="n">edge_ids</span><span class="p">)])</span>
+    
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:],</span>
+                         <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span><span class="s2">&quot;end&quot;</span><span class="p">],</span>
+                         <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">edges</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;edge&quot;</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">spins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">positions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">update_edge_directions</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span><span class="n">spins</span><span class="p">,</span><span class="n">positions</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">edges</span>
+        
+<div class="viewcode-block" id="vertices"><a class="viewcode-back" href="../../API.html#icenumerics.vertices">[docs]</a><span class="k">class</span> <span class="nc">vertices</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ice</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">id_label</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">static</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the vertices array.</span>
+<span class="sd">        Initialization method for the vertices class. </span>
+<span class="sd">        Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using &quot;colloids_to_vertices&quot;, &quot;spins_to_vertices&quot;, or &quot;trj_to_vertices&quot;. </span>
+<span class="sd">        If an object is given to create a vertex array, do so. </span>
+<span class="sd">        ---------</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        * positions: Ordered list containing the geometry of the vertices.</span>
+<span class="sd">        * edges: Ordered list, or disordered set, containing the pairs of vertices that are joined. </span>
+<span class="sd">        * ice (colloidal_ice object, trj dataframe, spin_ice object): Initializes the topology, inferring from the input. </span>
+<span class="sd">            * colloidal_ice (colloidal_ice object, optional): Initalizes the vertices from a colloidal_ice object</span>
+<span class="sd">            * spin_ice (spin_ice object, optional): Initializes the vertices from a spin_ice object</span>
+<span class="sd">            * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. </span>
+<span class="sd">        * id_label (string, optional): If the index of `trj` has more than one level, this is the name of the level that identifies particles. Defaults to &quot;id&quot;.</span>
+<span class="sd">        * static (boolean, True): If the topology of the traps doesn&#39;t change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex. False is not implemented</span>
+<span class="sd">        </span>
+<span class="sd">        Attributes: </span>
+<span class="sd">        * vertices (DataFrame): contains the possitions of the vertices, plus whatever properties have been calculated. </span>
+<span class="sd">        * edges (DataFrame): contains the pairs of vertices that are connected. The edges are directed and go from the first vertex to the second vertex. </span>
+<span class="sd">        * edge_directory (dict): indicates which vertices are formed by which edges. The index is the edge number. Each entry contains a list of vertices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:[],</span><span class="s2">&quot;y&quot;</span><span class="p">:[]},</span>
+                            <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([],</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;vertex&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;start&quot;</span><span class="p">:[],</span><span class="s2">&quot;end&quot;</span><span class="p">:[]},</span>
+                             <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([],</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;edge&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span> <span class="o">=</span> <span class="p">{}</span>
+            
+        <span class="k">if</span> <span class="n">positions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+            
+        <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+                        
+    <span class="k">def</span> <span class="nf">infer_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ice</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;crossings&quot;</span><span class="p">,</span> <span class="n">tolerance</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Infer the topology from the spin structure.</span>
+<span class="sd">        ------------</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        input: object to get the spins from. </span>
+<span class="sd">        positions (optional): </span>
+<span class="sd">        method (string, &quot;crossings&quot;): Method to infer the positions of the vertices. </span>
+<span class="sd">            * &quot;crossings&quot; defines vertices as being in the crossing points of two spins. This is illdefined in more than 2D. </span>
+<span class="sd">            * &quot;voronoi&quot; defines vertices as being in the corners of the voronoi tesselation of  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spins</span> <span class="o">=</span> <span class="n">ice_to_spins</span><span class="p">(</span><span class="n">ice</span><span class="p">)</span>
+
+        <span class="n">neighbor_pairs</span> <span class="o">=</span> <span class="n">calculate_neighbor_pairs</span><span class="p">(</span><span class="n">spins</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">])</span>
+        <span class="n">neighbor_pairs</span> <span class="o">=</span> <span class="n">from_neighbors_get_nearest_neighbors</span><span class="p">(</span><span class="n">neighbor_pairs</span><span class="p">)</span>
+        <span class="n">neighbor_pairs</span> <span class="o">=</span> <span class="n">get_vertices_positions</span><span class="p">(</span><span class="n">neighbor_pairs</span><span class="p">,</span><span class="n">spins</span><span class="p">)</span>
+        
+        <span class="n">positions</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="n">unique_points</span><span class="p">(</span><span class="n">neighbor_pairs</span><span class="p">[</span><span class="s1">&#39;Vertex&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">neighbor_pairs</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s2">&quot;Pair&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> 
+                                <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">copies</span><span class="p">)}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">create_edge_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">,</span> <span class="n">spins</span><span class="p">,</span> <span class="n">positions</span><span class="p">)</span>   
+    
+    <span class="k">def</span> <span class="nf">update_directions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Updates the directions of the vertices using an ice object &quot;&quot;&quot;</span>
+        
+        <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">spins</span> <span class="o">=</span> <span class="n">ice_to_spins</span><span class="p">(</span><span class="n">ice</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">update_edge_directions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">,</span> <span class="n">spins</span><span class="p">,</span> <span class="n">positions</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">calculate_coordination</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adds a column to the &#39;vertices&#39; array with the vertex coordination &quot;&quot;&quot;</span>
+        <span class="n">coordination</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">vertex</span><span class="p">])</span> <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="s2">&quot;coordination&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordination</span>
+         
+    <span class="k">def</span> <span class="nf">calculate_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adds a column to the &#39;vertices&#39; array with the vertex charge. &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="s2">&quot;charge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">v_id</span><span class="p">,</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">indegree</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">v_id</span><span class="p">]]</span><span class="o">.</span><span class="n">end</span><span class="o">==</span><span class="n">v_id</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">outdegree</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">v_id</span><span class="p">]]</span><span class="o">.</span><span class="n">start</span><span class="o">==</span><span class="n">v_id</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">v_id</span><span class="p">,</span><span class="s2">&quot;charge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">indegree</span><span class="o">-</span><span class="n">outdegree</span>
+    
+    <span class="k">def</span> <span class="nf">calculate_dipole</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spins</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adds two column sto the &#39;vertices&#39; array with the sum of the directions of the vertex components. &quot;&quot;&quot;</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="s2">&quot;dx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="s2">&quot;dy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">v_id</span><span class="p">,</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">v_id</span><span class="p">,[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">spins</span><span class="p">[</span><span class="s2">&quot;Direction&quot;</span><span class="p">][</span><span class="n">e</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">v_id</span><span class="p">]]),</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">classify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spins</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_coordination</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_charge</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_dipole</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span>
+         
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">colloids_to_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Uses the col object to infer the topology of the vertices and to classify them.&quot;&quot;&quot;</span>
+        
+        <span class="n">spins</span> <span class="o">=</span> <span class="n">ice_to_spins</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infer_topology</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classify_vertices</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span>
+    
+    <span class="k">def</span> <span class="nf">trj_to_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trj</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">id_label</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">static</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Convert a trj into a vertex array. </span>
+<span class="sd">        If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers. </span>
+<span class="sd">        ---------</span>
+<span class="sd">        Parameters: </span>
+<span class="sd">        * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. </span>
+<span class="sd">        * id_label (string, &quot;id&quot;): If the index of `trj` has more than one level, this is the name of the level that identifies particles.</span>
+<span class="sd">        * static (boolean, True): If the topology of the traps doesn&#39;t change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="k">def</span> <span class="nf">trj_to_vertices_single_frame</span><span class="p">(</span><span class="n">trj_frame</span><span class="p">):</span>
+            
+            <span class="n">spins</span> <span class="o">=</span> <span class="n">ice_to_spins</span><span class="p">(</span><span class="n">trj_frame</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">infer_topology</span><span class="p">(</span><span class="n">spins</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="n">positions</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_directions</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span> 
+                
+            <span class="bp">self</span><span class="o">.</span><span class="n">classify_vertices</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span>
+            
+        <span class="k">if</span> <span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                        
+            <span class="n">trj_to_vertices_single_frame</span><span class="p">(</span><span class="n">trj</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="bp">self</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+                
+            <span class="n">id_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">([</span><span class="n">n</span><span class="o">==</span><span class="s2">&quot;id&quot;</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">])</span>
+            <span class="n">other_i</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+            <span class="n">other_i</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">other_i</span><span class="p">[</span><span class="n">id_i</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_array</span> <span class="o">=</span> <span class="n">trj</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">other_i</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">trj_to_vertices_single_frame</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_array</span>
+            
+            <span class="k">return</span> <span class="bp">self</span>
+    
+    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">DspCoord</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">dpl_scale</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dpl_width</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">sl</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="n">sl</span><span class="o">+</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">sl</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        
+        <span class="n">vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">DspCoord</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">vertices</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">charge</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;b&#39;</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patches</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">v</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="o">.</span><span class="n">y</span><span class="p">),</span><span class="n">radius</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;charge&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">ec</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">charge</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">X</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">x</span>
+                    <span class="n">Y</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">y</span>
+                    
+                    <span class="n">DX</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">dpl_scale</span>
+                    <span class="n">DY</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;dy&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">dpl_scale</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patches</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">X</span><span class="o">-</span><span class="n">DX</span><span class="p">,</span><span class="n">Y</span><span class="o">-</span><span class="n">DY</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">DX</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">DY</span><span class="p">,</span><span class="n">width</span><span class="o">=</span><span class="n">dpl_width</span><span class="p">,</span><span class="n">fc</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">))</span>
+                
+        <span class="k">if</span> <span class="n">DspCoord</span><span class="p">:</span> 
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vertices</span><span class="o">.</span><span class="n">iterrows</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;charge&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;b&#39;</span>
+                    
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patches</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">v</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="o">.</span><span class="n">y</span><span class="p">),</span><span class="n">radius</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;charge&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">ec</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+                    
+                <span class="n">X</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">Y</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">y</span></div>
+        
+        <span class="c1">#ax.set_aspect(&quot;equal&quot;)    </span>
+        <span class="c1">#plt.axis(&quot;equal&quot;)</span>
+
+<span class="c1">#### Graph Class Definition ####</span>
+<span class="k">class</span> <span class="nc">graph</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Graph object with </span><span class="si">%u</span><span class="s2"> vertices and </span><span class="si">%u</span><span class="s2"> edges&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">decimation</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">decimation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">decimation</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">()]</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">decimation</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">()]</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            
+
+        <span class="n">centers</span><span class="p">,</span> <span class="n">directions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spins</span><span class="p">()</span>
+
+        <span class="n">v_points</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+        <span class="p">[</span> <span class="n">centers</span><span class="o">-</span><span class="n">directions</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">centers</span><span class="o">+</span><span class="n">directions</span><span class="o">/</span><span class="mi">2</span> <span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v_points</span><span class="p">[:,[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">]]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span><span class="n">v_points</span><span class="p">[:,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">]]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">spins_to_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spins</span><span class="p">,</span> <span class="n">periodic</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">region</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns a database of spins, a database of vertices and member directories both ways&quot;&quot;&quot;</span>
+
+        <span class="c1"># Create a database of spins</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">magnitude</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spins</span><span class="p">])</span>
+        <span class="n">directions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">direction</span><span class="o">.</span><span class="n">magnitude</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spins</span><span class="p">])</span>
+
+        <span class="n">sp_array</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">centers</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]),</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">directions</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">])],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">sp_array</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span>
+        <span class="n">sp_array</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+
+        <span class="c1"># Create two vertices for each spin</span>
+        <span class="n">vert</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+            <span class="n">sp_array</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span><span class="o">+</span><span class="n">sp_array</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">sp_array</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span><span class="o">-</span><span class="n">sp_array</span><span class="p">[[</span><span class="s2">&quot;dx&quot;</span><span class="p">,</span><span class="s2">&quot;dy&quot;</span><span class="p">,</span><span class="s2">&quot;dz&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">vert</span><span class="p">[</span><span class="s2">&quot;sp_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vert</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">vert</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vert</span><span class="p">))</span>
+        <span class="n">vert</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;v_id&quot;</span>
+
+        <span class="c1"># Generate a unique array of vertices</span>
+        <span class="n">vert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">vert</span><span class="o">*</span><span class="mf">1e6</span><span class="p">)</span><span class="o">*</span><span class="mf">1e-6</span>
+
+        <span class="k">if</span> <span class="n">periodic</span><span class="p">:</span>
+            <span class="n">vert</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">vert</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]],</span><span class="n">region</span><span class="p">)</span>
+            <span class="n">vert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">vert</span><span class="o">*</span><span class="mf">1e6</span><span class="p">)</span><span class="o">*</span><span class="mf">1e-6</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span><span class="o">=</span><span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">=</span> <span class="n">region</span>
+
+        <span class="n">v</span><span class="p">,</span> <span class="n">ind</span><span class="p">,</span> <span class="n">invind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">vert</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">return_index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">return_inverse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">vert_un</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">v</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)))</span>
+        <span class="n">vert_un</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;v_id&quot;</span>
+        <span class="n">vert_un</span> <span class="o">=</span> <span class="n">vert_un</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+        <span class="c1"># Directory of edges that point to or from a vertex.</span>
+        <span class="n">sp_id</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">vert_un</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">sp_id</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">vert</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">invind</span><span class="o">==</span><span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">sp_id</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="c1"># Directory of vertices that edges point to.</span>
+
+        <span class="n">v_id</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">sp</span> <span class="ow">in</span> <span class="n">sp_array</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">v_id</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">invind</span><span class="p">[</span><span class="n">vert</span><span class="p">[</span><span class="n">vert</span><span class="o">.</span><span class="n">sp_id</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="n">vert_un</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">v_id</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">,</span><span class="s2">&quot;v_2&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;e_id&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span> <span class="o">=</span> <span class="n">sp_id</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">rm_edges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Remove an edge &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latest</span> <span class="o">=</span> <span class="s2">&quot;decimation&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">rand</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">index</span><span class="p">)]]</span>
+
+        <span class="n">edge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_dec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rm_edges</span>
+    
+    <span class="k">def</span> <span class="nf">undo_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">rm_edges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Replace the last edge that was removed (it shoud be the last in the list)&quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rm_edges</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        
+            <span class="n">edge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_dec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_dec</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">rm_edges</span>
+        
+    <span class="k">def</span> <span class="nf">permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">rm_edges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Remove a random edge and place it elsewhere&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latest</span> <span class="o">=</span> <span class="s2">&quot;permutation&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rm_edges</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_permute</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">rand</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">index</span><span class="p">)]],</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">rand</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">rm_edges</span><span class="o">.</span><span class="n">index</span><span class="p">)]]]</span>
+            <span class="n">edge_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_permute</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">edge_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_permute</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_in</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge_out</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_out</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge_out</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_out</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge_out</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_in</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_in</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_in</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_in</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge_in</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_out</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rm_edges</span>
+
+    <span class="k">def</span> <span class="nf">undo_permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">rm_edges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; undo the latest permutation&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rm_edges</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+
+            <span class="n">edge_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_permute</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">edge_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_permute</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_permute</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_in</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge_out</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_out</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge_out</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_out</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge_out</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_in</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_in</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge_in</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_in</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge_in</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_out</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rm_edges</span>
+        
+    <span class="k">def</span> <span class="nf">refilling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">rm_edges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Replace an edge from the list rm_edges&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latest</span> <span class="o">=</span> <span class="s2">&quot;refilling&quot;</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rm_edges</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_refill</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">rand</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">rm_edges</span><span class="o">.</span><span class="n">index</span><span class="p">)]]</span>
+            <span class="n">edge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_refill</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rm_edges</span>
+    
+    <span class="k">def</span> <span class="nf">undo_refilling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rm_edges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; remove the last link which was replaced &quot;&quot;&quot;</span>
+        
+        <span class="n">edge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_refill</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_refill</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;v_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">rm_edges</span> <span class="o">=</span> <span class="n">rm_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rm_edges</span>
+        
+    <span class="k">def</span> <span class="nf">undo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rm_edges</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latest</span> <span class="o">==</span> <span class="s2">&quot;decimation&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undo_decimation</span><span class="p">(</span><span class="n">rm_edges</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latest</span> <span class="o">==</span> <span class="s2">&quot;permutation&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undo_permutation</span><span class="p">(</span><span class="n">rm_edges</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latest</span> <span class="o">==</span> <span class="s2">&quot;refilling&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undo_refilling</span><span class="p">(</span><span class="n">rm_edges</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">deep</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">spins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+
+        <span class="n">centers</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">v_1</span><span class="p">,[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">v_2</span><span class="p">,[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">directions</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">v_1</span><span class="p">,[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">v_2</span><span class="p">,[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span><span class="p">:</span>
+
+            <span class="n">fwloop</span> <span class="o">=</span> <span class="n">directions</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span>
+            <span class="n">bwloop</span> <span class="o">=</span> <span class="n">directions</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span>
+
+            <span class="n">cnreg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span>
+            <span class="n">cnreg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">cnreg</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ctloop</span> <span class="o">=</span> <span class="n">centers</span> <span class="o">+</span> <span class="n">cnreg</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">centers</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">directions</span><span class="p">)</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctloop</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">directions</span><span class="p">)</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">centers</span><span class="p">[</span><span class="n">directions</span><span class="o">&lt;-</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctloop</span><span class="p">[</span><span class="n">directions</span><span class="o">&lt;-</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">directions</span><span class="p">[</span><span class="n">directions</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">fwloop</span><span class="p">[</span><span class="n">directions</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">directions</span><span class="p">[</span><span class="n">directions</span><span class="o">&lt;-</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">bwloop</span><span class="p">[</span><span class="n">directions</span><span class="o">&lt;-</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">centers</span><span class="o">*</span><span class="n">units</span><span class="p">,</span> <span class="n">directions</span><span class="o">*</span><span class="n">units</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">icenumerics</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../IceNumericsUsage.html">Usage instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Units.html">About units.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Pandas.html">The multiindex pandas array</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/ReadingColloidsFromSimulation.html">Read colloidal ice from simulation or experimental data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/VerticesClassification.html">Vertex Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/ForcesOfTheSimulation.html">Forces in the simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/CalculateEnergy.html">Calculate Energy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../OtherNotebooks/CalculateEnergy.html#Calculate-the-energy-of-a-configuration.">Calculate the energy of a configuration.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../API.html">The <cite>icenumerics</cite> API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Antonio Ortiz-Ambriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
