@@ -5,7 +5,7 @@ import matplotlib.patches as ptch
 import matplotlib.animation as anm
 import scipy.spatial as spa
 import pandas as pd
-
+import warnings
 
 from icenumerics.geometry import *
 from icenumerics.parameters import *
@@ -291,9 +291,13 @@ class colloidal_ice(list):
         p_type, inverse_p = unique_objects(particles)
         t_type, inverse_t = unique_objects(traps)
         
+        p_id = np.arange(len(colloids))
+        
         particle_types = []
+        
+        particle_locations = []
+        
         for i,p in enumerate(p_type):
-
             
             particle_types.append(mc.particles(
                 positions[np.array(inverse_p)==i],
@@ -302,16 +306,34 @@ class colloidal_ice(list):
                 radius = p.radius,
                 susceptibility = p.susceptibility,
                 drag = p.drag))
-
+                
+            particle_locations.append(p_id[np.array(inverse_p)==i])
+        
+        particle_locations = np.array([loc for p_loc in particle_locations for loc in p_loc])    
+        self.particle_locations = particle_locations
+        
         trap_types = []
-        for i,t in enumerate(t_type):
+        # trapbonds
 
-            subset_trap = None
-                        
+        part_in_type = [np.where(np.array(inverse_p)==t)[0] for t, pt in enumerate(p_type)]
+        trap_bond_i = lambda i,p: np.concatenate([[p], list(np.where(part_in_type[p]==i)[0])])
+        trap_bonds = [trap_bond_i(i,p) for i, p in enumerate(inverse_p)]
+        
+        for i,t in enumerate(t_type):
+            
+            ## inverse_t relates a type of trap, to a position in the trap array
+            ## inverse_p relates a type of particle to a position in the particle array
+            
+            ## the particle array and the trap array have the same order: namely, particle i should bond with trap i. 
+            
+            subsets = [trap_bonds[j] for j, typ in enumerate(inverse_t) if typ==i]
+            
             trap_types.append(mc.bistable_trap(
                 centers[np.array(inverse_t)==i],  
                 directions[np.array(inverse_t)==i],
-                particle_types, [np.array(inverse_t)==i], # I don't know how this would work for several types of particles. 
+                particle_types, 
+                subsets = subsets,
+                # I don't know how this would work for several types of particles. 
                 atom_type = 1, 
                 trap_id = np.arange(len(centers))+len(colloids),
                 distance = t.trap_sep,
@@ -348,7 +370,8 @@ class colloidal_ice(list):
             "world":world_sim,
             "field":field,
             "processors":processors}
-    
+            
+            
         self.name = name
         self.dir_name = targetdir
         self.include_timestamp = include_timestamp
@@ -371,9 +394,11 @@ class colloidal_ice(list):
     def set_state_from_frame(self, frame):
         
         frame = self.frames[frame]
+        index = np.argsort(self.particle_locations)
+        
         for i,c in enumerate(self):
 
-            c.colloid = self.trj.loc[(frame,i+1),["x","y","z"]].values*ureg.um - c.center
+            c.colloid = self.trj.loc[(frame,index[i]+1),["x","y","z"]].values*ureg.um - c.center
 
             dot_prod = np.dot(c.colloid.magnitude,c.direction)
             dot_prod_sign = (dot_prod>=0)*1+(dot_prod<0)*(-1)
@@ -489,9 +514,6 @@ def unique_objects(object_list):
     inverse = [where(obj,list_of_unique) for obj in object_list]
      
     return list_of_unique, inverse
-
-
-import warnings
 
 def classify_objects(object_list):
     """ Classifies objects by uniqueness. Returns a list with an object type directory."""
