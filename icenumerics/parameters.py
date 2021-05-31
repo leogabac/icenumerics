@@ -35,7 +35,8 @@ class particle():
                 susceptibility = 1,
                 drag = 4e6*ureg.pN/(ureg.um/ureg.s), 
                 diffusion = None, temperature = None, 
-                density = 1000*ureg.kg/ureg.m**3):
+                density = 1000*ureg.kg/ureg.m**3,
+                activity = None):
         """Initializes a particle type. """
         
         if diffusion:
@@ -53,6 +54,7 @@ class particle():
         damp = 1e-3*ureg.us
         
         self.drag_mass = (drag*damp).to(ureg.pg)
+        self.activity = activity
         
 class world():
     

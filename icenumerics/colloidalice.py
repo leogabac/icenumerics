@@ -305,7 +305,8 @@ class colloidal_ice(list):
                 atoms_id = np.arange(len(colloids)),
                 radius = p.radius,
                 susceptibility = p.susceptibility,
-                drag = p.drag))
+                drag = p.drag,
+                activity = p.activity))
                 
             particle_locations.append(p_id[np.array(inverse_p)==i])
         
