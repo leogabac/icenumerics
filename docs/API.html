@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The icenumerics API &#8212; icenumerics v0.1.9 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -13,11 +14,11 @@
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Calculate Energy" href="OtherNotebooks/CalculateEnergy.html" />
+    <link rel="prev" title="Running simulations with a field that is a function of time" href="OtherNotebooks/SimulationsWithVariableField.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -127,7 +128,7 @@ Stiffness: Stiffness of the trap [in pNnm].</p>
 
 <dl class="py class">
 <dt id="icenumerics.particle">
-<em class="property">class </em><code class="sig-prename descclassname">icenumerics.</code><code class="sig-name descname">particle</code><span class="sig-paren">(</span><em class="sig-param">radius=&lt;Quantity(2</em>, <em class="sig-param">'micrometer')&gt;</em>, <em class="sig-param">susceptibility=1</em>, <em class="sig-param">drag=&lt;Quantity(4000000.0</em>, <em class="sig-param">'piconewton * second / micrometer')&gt;</em>, <em class="sig-param">diffusion=None</em>, <em class="sig-param">temperature=None</em>, <em class="sig-param">density=&lt;Quantity(1000.0</em>, <em class="sig-param">'kilogram / meter ** 3')&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/parameters.html#particle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.particle" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">icenumerics.</code><code class="sig-name descname">particle</code><span class="sig-paren">(</span><em class="sig-param">radius=&lt;Quantity(2</em>, <em class="sig-param">'micrometer')&gt;</em>, <em class="sig-param">susceptibility=1</em>, <em class="sig-param">drag=&lt;Quantity(4000000.0</em>, <em class="sig-param">'piconewton * second / micrometer')&gt;</em>, <em class="sig-param">diffusion=None</em>, <em class="sig-param">temperature=None</em>, <em class="sig-param">density=&lt;Quantity(1000.0</em>, <em class="sig-param">'kilogram / meter ** 3')&gt;</em>, <em class="sig-param">activity=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icenumerics/parameters.html#particle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#icenumerics.particle" title="Permalink to this definition">¶</a></dt>
 <dd><p>The diffusion coefficient can be given instead o the drag.
 In that case, the temperature is also needed to calculatelm the drag. 
 This represents the density mismatch of the particle in the solvent</p>
@@ -184,6 +185,7 @@ This represents the density mismatch of the particle in the solvent</p>
 <li class="toctree-l1"><a class="reference internal" href="OtherNotebooks/ForcesOfTheSimulation.html">Forces in the simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="OtherNotebooks/CalculateEnergy.html">Calculate Energy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="OtherNotebooks/CalculateEnergy.html#Calculate-the-energy-of-a-configuration.">Calculate the energy of a configuration.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherNotebooks/SimulationsWithVariableField.html">Running simulations with a field that is a function of time</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">The <cite>icenumerics</cite> API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#the-spins-class">The <cite>spins</cite> class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-colloidal-ice-class">The <cite>colloidal_ice</cite> class</a></li>
@@ -198,7 +200,7 @@ This represents the density mismatch of the particle in the solvent</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="OtherNotebooks/CalculateEnergy.html" title="previous chapter">Calculate Energy</a></li>
+      <li>Previous: <a href="OtherNotebooks/SimulationsWithVariableField.html" title="previous chapter">Running simulations with a field that is a function of time</a></li>
   </ul></li>
 </ul>
 </div>
@@ -228,7 +230,7 @@ This represents the density mismatch of the particle in the solvent</p>
       &copy;2018, Antonio Ortiz-Ambriz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

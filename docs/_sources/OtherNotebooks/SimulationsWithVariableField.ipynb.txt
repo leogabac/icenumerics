@@ -1,0 +1,251 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Running simulations with a field that is a function of time"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The current api can be used to run simulations that have variable fields. By default, this variable field can be made to rotate in plane, or with a constant vertical component. However, these are only examples, and the field can really be any function of time. The strategy to do this is to modify the values of the field to use LAMMPS variables. The documentation for the functions that can be used with LAMMPS variables can be found in [https://docs.lammps.org/variable.html](https://docs.lammps.org/variable.html). "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import sys\n",
+    "\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import matplotlib as mpl\n",
+    "import pandas as pd\n",
+    "\n",
+    "sys.path.insert(0, '../../../../icenumerics/')\n",
+    "import icenumerics as ice\n",
+    "\n",
+    "ureg = ice.ureg\n",
+    "\n",
+    "%reload_ext autoreload\n",
+    "%autoreload 2\n",
+    "\n",
+    "idx = pd.IndexSlice"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mpl.rc('text', usetex=True)\n",
+    "mpl.rcParams['figure.dpi'] = 150"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Define simulations\n",
+    "\n",
+    "To do this, we need first to define a simulation as if we are going to run it with a constant system. Note that in the last step we are using the method `simulation` instead of `simulate`. This is because we don't want to run the simulation just yet. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "sp = ice.spins()\n",
+    "\n",
+    "S = 4*ureg.um\n",
+    "R = 1*ureg.um\n",
+    "total_time = 300*ureg.s\n",
+    "\n",
+    "L = S+4*(R+.5*ureg.um)*np.cos(np.pi/4)\n",
+    "N = 10\n",
+    "sp.create_lattice(\"square\",[N,N],lattice_constant=L, border=\"periodic\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "particle = ice.particle(radius = R,\n",
+    "             susceptibility = 0.0576,\n",
+    "             diffusion = 0.125*ureg.um**2/ureg.s,\n",
+    "             temperature = 300*ureg.K,\n",
+    "             density = 1000*ureg.kg/ureg.m**3)\n",
+    "\n",
+    "trap = ice.trap(trap_sep = S,\n",
+    "               height = 4*ureg.pN*ureg.nm,\n",
+    "               stiffness = 1e-3*ureg.pN/ureg.nm)\n",
+    "\n",
+    "col = ice.colloidal_ice(sp, particle, trap, \n",
+    "                        height_spread = 0, susceptibility_spread = 0.1,\n",
+    "                        periodic = True)\n",
+    "col.randomize()\n",
+    "col.region = np.array([[0,0,-3*(R/L/N).magnitude],[1,1,3*(R/L/N).magnitude]])*N*L\n",
+    "\n",
+    "world = ice.world(\n",
+    "    field = 1*ureg.mT,\n",
+    "    temperature = 300*ureg.K,\n",
+    "    dipole_cutoff = 200*ureg.um)\n",
+    "\n",
+    "col.simulation(world,\n",
+    "             name = \"test\",\n",
+    "             include_timestamp = False,\n",
+    "             targetdir = r\".\",\n",
+    "             framerate = 30*ureg.Hz,\n",
+    "             timestep = 10*ureg.ms,\n",
+    "             run_time = total_time,\n",
+    "             output = [\"x\",\"y\",\"z\",\"mux\",\"muy\",\"muz\"])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "If we look at the components of the field, we see that they are defined as functions of other variables `v_Bmag`, `v_theta`, `time` and `v_phi`. This is done to implement the default conical rotating field. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "v_Bmag*cos(v_freq*time*2*PI+v_phi)*sin(v_theta)\n",
+      "v_Bmag*cos(v_theta)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(col.sim.field.fieldx)\n",
+    "print(col.sim.field.fieldz)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can use these functions, especially `v_Bmag` and `time` to define our version of the field. Note here that `time` doesn't have a `v_` before it. This is because it is an internal variable of lammps. As such, we must be careful because it is in $\\mu{} s$\n",
+    "\n",
+    "Using `v_Bmag` is useful because it is converted internally from $\\mathrm{mT}$ to the units of the simulations (which are non standard). This value corresponds to whatever is given as the parameter `field`to the `world` object."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For example: we can apply a ramped field for a time (let's say 10 seconds) and then apply a constant field. All in plane components will be zero. The ramped field should go up to 1, and then stay constant there. This can be achieved by the function:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "col.sim.field.fieldx = \"0\"\n",
+    "col.sim.field.fieldy = \"0\"\n",
+    "col.sim.field.fieldz = \"v_Bmag/10e6*time*(time<10e6)+v_Bmag*(time>=10e6)\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "After we do this, we can run the simulation:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "col.run_simulation()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### We can also load the simulation to check"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "col.load_simulation()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "in this case, we can take advantage of the moments written to the output files to obtain the shape of the field in time"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "col.trj.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plt.figure(figsize=(2,1.5))\n",
+    "plt.plot(col.trj.loc[idx[:,1],\"t\"],col.trj.loc[idx[:,1],\"muz\"])\n",
+    "plt.xlim(-.1,60)\n",
+    "plt.xlabel(r\"$t [s]$\")\n",
+    "plt.ylabel(r\"$\\vec{m}\\cdot\\hat{z}$\");"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

@@ -18,4 +18,5 @@ Welcome to icenumerics's documentation!
    OtherNotebooks/VerticesClassification
    OtherNotebooks/ForcesOfTheSimulation
    OtherNotebooks/CalculateEnergy
+   OtherNotebooks/SimulationsWithVariableField
    API
