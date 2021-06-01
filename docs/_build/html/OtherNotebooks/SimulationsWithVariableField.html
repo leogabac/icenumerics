@@ -334,7 +334,7 @@ div.rendered_html tbody tr:hover {
 
 <span class="n">S</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span>
 <span class="n">R</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span>
-<span class="n">total_time</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span>
+<span class="n">total_time</span> <span class="o">=</span> <span class="mi">60</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span>
 
 <span class="n">L</span> <span class="o">=</span> <span class="n">S</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">R</span><span class="o">+.</span><span class="mi">5</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span>
@@ -372,7 +372,7 @@ div.rendered_html tbody tr:hover {
              <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
              <span class="n">include_timestamp</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
              <span class="n">targetdir</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
-             <span class="n">framerate</span> <span class="o">=</span> <span class="mi">30</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+             <span class="n">framerate</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
              <span class="n">timestep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
              <span class="n">run_time</span> <span class="o">=</span> <span class="n">total_time</span><span class="p">,</span>
              <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">,</span><span class="s2">&quot;mux&quot;</span><span class="p">,</span><span class="s2">&quot;muy&quot;</span><span class="p">,</span><span class="s2">&quot;muz&quot;</span><span class="p">])</span>
@@ -426,7 +426,7 @@ v_Bmag*cos(v_theta)
 <div class="section" id="We-can-also-load-the-simulation-to-check">
 <h3>We can also load the simulation to check<a class="headerlink" href="#We-can-also-load-the-simulation-to-check" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -435,8 +435,8 @@ v_Bmag*cos(v_theta)
 </div>
 </div>
 <p>in this case, we can take advantage of the moments written to the output files to obtain the shape of the field in time</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -444,8 +444,115 @@ v_Bmag*cos(v_theta)
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>type</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>mux</th>
+      <th>muy</th>
+      <th>muz</th>
+      <th>t</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th>id</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="5" valign="top">0</th>
+      <th>1</th>
+      <td>1</td>
+      <td>2.121320</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>10.364000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>18.606600</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>26.849199</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1</td>
+      <td>39.091900</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -455,6 +562,13 @@ v_Bmag*cos(v_theta)
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t [s]$&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\vec</span><span class="si">{m}</span><span class="s2">\cdot\hat</span><span class="si">{z}</span><span class="s2">$&quot;</span><span class="p">);</span>
 </pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/OtherNotebooks_SimulationsWithVariableField_18_0.png" src="../_images/OtherNotebooks_SimulationsWithVariableField_18_0.png" />
 </div>
 </div>
 </div>
