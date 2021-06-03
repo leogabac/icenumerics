@@ -304,33 +304,24 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="c1"># This only adds the package to the path.</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;../../&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;../../../&#39;</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">icenumerics</span> <span class="k">as</span> <span class="nn">ice</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="k">as</span> <span class="nn">spa</span>
 
 <span class="o">%</span><span class="k">load_ext</span> autoreload
 <span class="o">%</span><span class="k">autoreload</span> 2
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="k">as</span> <span class="nn">spa</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="We-first-create-a-colloidal-ice-to-play-around-with">
 <h2>We first create a colloidal ice to play around with<a class="headerlink" href="#We-first-create-a-colloidal-ice-to-play-around-with" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -339,7 +330,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -366,13 +357,13 @@ div.rendered_html tbody tr:hover {
 <li><p>Maybe the colloidal_ice object should keep a trj dataframe to begin with.</p></li>
 <li><p>Also, it occurs to me that the standard trj object stored by colloidal ice shouldn’t be directly read from the lammpstrj, but instead should be processed to a trj object containing directions and colloids. This might be part of creating a <em>results</em> object.</p></li>
 </ul>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">world</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">world</span><span class="p">(</span>
-    <span class="n">field</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">mT</span><span class="p">,</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="mi">20</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">mT</span><span class="p">,</span>
     <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
     <span class="n">dipole_cutoff</span> <span class="o">=</span> <span class="mi">200</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">um</span><span class="p">)</span>
 
@@ -380,28 +371,23 @@ div.rendered_html tbody tr:hover {
              <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
              <span class="n">include_timestamp</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
              <span class="n">targetdir</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
-             <span class="n">framerate</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+             <span class="n">framerate</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
              <span class="n">timestep</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
-             <span class="n">run_time</span> <span class="o">=</span> <span class="mi">60</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+             <span class="n">run_time</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">ureg</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
              <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">,</span><span class="s2">&quot;mux&quot;</span><span class="p">,</span><span class="s2">&quot;muy&quot;</span><span class="p">,</span><span class="s2">&quot;muz&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[&lt;icenumerics.magcolloids.magcolloids.parameters.particles object at 0x8195e14e0&gt;]
-</pre></div></div>
-</div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
 <span class="n">col</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ax2</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">trj_i</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">trj</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">trj_i</span><span class="o">.</span><span class="n">type</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trj_i</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">trj_i</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -409,13 +395,13 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/OtherNotebooks_VerticesClassification_10_0.png" src="../_images/OtherNotebooks_VerticesClassification_10_0.png" />
+<img alt="../_images/OtherNotebooks_VerticesClassification_9_0.png" src="../_images/OtherNotebooks_VerticesClassification_9_0.png" />
 </div>
 </div>
 <div class="section" id="Create-a-‘vertex’-object-from-a-‘colloidal_ice’-object">
 <h3>Create a ‘vertex’ object from a ‘colloidal_ice’ object<a class="headerlink" href="#Create-a-‘vertex’-object-from-a-‘colloidal_ice’-object" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -424,17 +410,45 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b7ddceef1ab2435baf42ada44b73f6f0", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "27a53df922f44f1cb3f4535e1e62b2ea", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;icenumerics.vertices.vertices at 0x81a202e10&gt;
+&lt;icenumerics.vertices.vertices at 0x7fc2ae6ee820&gt;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -449,7 +463,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/OtherNotebooks_VerticesClassification_13_0.png" src="../_images/OtherNotebooks_VerticesClassification_13_0.png" />
+<img alt="../_images/OtherNotebooks_VerticesClassification_12_0.png" src="../_images/OtherNotebooks_VerticesClassification_12_0.png" />
 </div>
 </div>
 </div>
@@ -457,7 +471,7 @@ div.rendered_html tbody tr:hover {
 <h3>Create a vertex structure from the results of lammps.<a class="headerlink" href="#Create-a-vertex-structure-from-the-results-of-lammps." title="Permalink to this headline">¶</a></h3>
 <p>We can get the vertex structure from a trajectory. To do this, the trajectory must be in the ‘ice’ format obtained by ‘get_ice_trj’:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -467,7 +481,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -597,26 +611,46 @@ div.rendered_html tbody tr:hover {
 <p>Notice that in this format, the columns contain the directions and colloid positions of the traps.</p>
 <p>The ‘vertex’ class can process the results of a single frame, by giving it as an input a trajectory with a single index.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">v</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">vertices</span><span class="p">()</span>
-<span class="n">v</span><span class="o">.</span><span class="n">trj_to_vertices</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">frame</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">trj_to_vertices</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">frame</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
-</pre></div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "f0252e3604d6478f86badc76c4aafb24", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;icenumerics.vertices.vertices at 0x81958c6a0&gt;
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "5d96f8104d8c43598cb72af1b8f0c437", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -631,7 +665,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/OtherNotebooks_VerticesClassification_20_0.png" src="../_images/OtherNotebooks_VerticesClassification_20_0.png" />
+<img alt="../_images/OtherNotebooks_VerticesClassification_19_0.png" src="../_images/OtherNotebooks_VerticesClassification_19_0.png" />
 </div>
 </div>
 </div>
@@ -640,13 +674,15 @@ div.rendered_html tbody tr:hover {
 <h2>Multiple frames<a class="headerlink" href="#Multiple-frames" title="Permalink to this headline">¶</a></h2>
 <p>If the ‘trj’ is a MultiIndex, the ‘trj_to_vertices’ method will iterate over all the indices which are not ‘id’, and calculate the vertex structure of all frames. However, it will only calculate the topology of the first frame.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="o">%%time</span>
 <span class="n">v</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">vertices</span><span class="p">()</span>
-<span class="n">v</span><span class="o">.</span><span class="n">trj_to_vertices</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">])</span>
+<span class="n">frames</span> <span class="o">=</span> <span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;frame&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">trj_to_vertices</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">frames</span><span class="p">[:]])</span>
 </pre></div>
 </div>
 </div>
@@ -654,19 +690,149 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ddd52a83d956485fa27d1fe63c18e12c", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "c98454f639d84de5a1baff6de01e25d0", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 5.81 s, sys: 58.6 ms, total: 5.87 s
-Wall time: 6.01 s
+
 </pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "0a4ed6d143f24d199efb9727c2a2f07b", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+
+CPU times: user 44.8 s, sys: 1.33 s, total: 46.1 s
+Wall time: 59.4 s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;icenumerics.vertices.vertices at 0x7fc2af6bca30&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">v</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;icenumerics.vertices.vertices at 0x81b920358&gt;
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>x</th>
+      <th>y</th>
+      <th>coordination</th>
+      <th>charge</th>
+      <th>dx</th>
+      <th>dy</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th>vertex</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="5" valign="top">0</th>
+      <th>0</th>
+      <td>0.0</td>
+      <td>210.0</td>
+      <td>3</td>
+      <td>-1</td>
+      <td>1.0</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>300.0</td>
+      <td>30.0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1.0</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>30.0</td>
+      <td>0.0</td>
+      <td>3</td>
+      <td>-1</td>
+      <td>2.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>180.0</td>
+      <td>300.0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>2.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>210.0</td>
+      <td>300.0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>2.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
@@ -685,6 +851,68 @@ Wall time: 6.01 s
 </div>
 <div class="output_area docutils container">
 <img alt="../_images/OtherNotebooks_VerticesClassification_24_0.png" src="../_images/OtherNotebooks_VerticesClassification_24_0.png" />
+</div>
+</div>
+<div class="section" id="Classifying-and-Counting-vertices.">
+<h3>Classifying and Counting vertices.<a class="headerlink" href="#Classifying-and-Counting-vertices." title="Permalink to this headline">¶</a></h3>
+<p>From the previous vertex object, where the trayectory of the vertices have been calculated (the time evolution of the vertices) we can then classify and count the vertices using the following procedures:</p>
+<p>First we define a function that classifes the vertices. This means taking properties that have been calculated like charge, coordination or dipole, and asigning a “type”. It’s advisable to make the type an integer.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">classify_vertices</span><span class="p">(</span><span class="n">vrt</span><span class="p">):</span>
+    <span class="n">vrt</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+    <span class="n">vrt</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vrt</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;coordination==4 &amp; charge == -4&quot;</span><span class="p">),</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">vrt</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vrt</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;coordination==4 &amp; charge == -2&quot;</span><span class="p">),</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">vrt</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vrt</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;coordination==4 &amp; charge == 0 &amp; (dx**2+dy**2)==0&quot;</span><span class="p">),</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">vrt</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vrt</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;coordination==4 &amp; charge == 0 &amp; (dx**2+dy**2)&gt;0&quot;</span><span class="p">),</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">vrt</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vrt</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;coordination==4 &amp; charge == 2&quot;</span><span class="p">),</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">vrt</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vrt</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;coordination==4 &amp; charge == 4&quot;</span><span class="p">),</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="k">return</span> <span class="n">vrt</span>
+
+<span class="n">v</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="n">classify_vertices</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Now, we can use the builtin function <code class="docutils literal notranslate"><span class="pre">count_vertices</span></code>, which takes a column, and get’s the total number o vertices for which the given column is of a given unique value.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">count</span> <span class="o">=</span> <span class="n">ice</span><span class="o">.</span><span class="n">count_vertices</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">for</span> <span class="n">t</span><span class="p">,</span><span class="n">v_t</span> <span class="ow">in</span> <span class="n">count</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v_t</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;frame&quot;</span><span class="p">),</span> <span class="n">v_t</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">t</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.legend.Legend at 0x7fc2af6bc280&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/OtherNotebooks_VerticesClassification_30_1.png" src="../_images/OtherNotebooks_VerticesClassification_30_1.png" />
+</div>
 </div>
 </div>
 </div>

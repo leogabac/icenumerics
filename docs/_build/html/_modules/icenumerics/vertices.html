@@ -46,8 +46,21 @@
 <span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="k">as</span> <span class="nn">sptl</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">import</span> <span class="nn">tqdm.notebook</span> <span class="k">as</span> <span class="nn">tqdm</span>
+<span class="kn">import</span> <span class="nn">tqdm.auto</span> <span class="k">as</span> <span class="nn">tqdm</span>
 
+<span class="k">def</span> <span class="nf">count_vertices</span><span class="p">(</span><span class="n">vrt</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span> <span class="s2">&quot;frame&quot;</span><span class="p">):</span>
+    <span class="n">vrt_count</span> <span class="o">=</span> <span class="n">vrt</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">time</span><span class="p">,</span><span class="n">column</span><span class="p">])</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
+
+    <span class="n">vrt_count</span> <span class="o">=</span> <span class="n">vrt_count</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">vrt_count</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span>
+         <span class="n">vrt_count</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">column</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()]),</span> <span class="n">fill_value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">total_vrt</span> <span class="o">=</span> <span class="n">vrt_count</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">vrt_count</span><span class="p">[</span><span class="s2">&quot;fraction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vrt_count</span><span class="o">.</span><span class="n">number</span> <span class="o">/</span> \
+        <span class="n">total_vrt</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vrt_count</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">time</span><span class="p">)]</span><span class="o">.</span><span class="n">number</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="k">return</span> <span class="n">vrt_count</span>
+    
 <span class="k">def</span> <span class="nf">spin_crossing_point</span><span class="p">(</span><span class="n">S1</span><span class="p">,</span><span class="n">S2</span><span class="p">):</span>
     <span class="c1"># This works well in 2d. In 3d it&#39;s triciker</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">S2</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
@@ -176,11 +189,14 @@
         
     <span class="k">return</span> <span class="n">vertices</span>
 
-<span class="k">def</span> <span class="nf">update_edge_directions</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">spins</span><span class="p">,</span> <span class="n">positions</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">update_edge_directions</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">spins</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">verb</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Map the &#39;spins&#39; to the edge directions in &#39;edges&#39;. &quot;&quot;&quot;</span>
-
-
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">e</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">edges</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)):</span>
+    
+    <span class="n">progress</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">:</span> <span class="n">x</span>
+    <span class="k">if</span> <span class="n">verb</span><span class="p">:</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span>
+        
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">e</span> <span class="ow">in</span> <span class="n">progress</span><span class="p">(</span><span class="n">edges</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)):</span>
 
         <span class="n">spin_direction</span> <span class="o">=</span> <span class="n">spins</span><span class="p">[</span><span class="s2">&quot;Direction&quot;</span><span class="p">][</span><span class="n">e</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
 
@@ -197,7 +213,7 @@
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">spin_direction</span><span class="p">,</span><span class="n">vertex_join</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
             <span class="c1">## flip edge</span>
-            <span class="n">e</span><span class="p">[[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span><span class="s2">&quot;end&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">e</span><span class="p">[[</span><span class="s2">&quot;end&quot;</span><span class="p">,</span><span class="s2">&quot;start&quot;</span><span class="p">]]</span>
+            <span class="n">edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span><span class="s2">&quot;end&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,[</span><span class="s2">&quot;end&quot;</span><span class="p">,</span><span class="s2">&quot;start&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
 
     <span class="k">return</span> <span class="n">edges</span>
 
@@ -205,11 +221,11 @@
     <span class="sd">&quot;&quot;&quot; Retrieve the edge array from the edge_directory. </span>
 <span class="sd">    If spins and positions are given they are used to calculate the directions of the edges. </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">edge_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edge_directory</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">edge_directory</span><span class="p">[</span><span class="n">v</span><span class="p">])]))</span>
+    
+    <span class="n">edge_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">edge_directory</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edge_directory</span><span class="p">[</span><span class="n">v</span><span class="p">]]))</span>
     
     <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">e</span><span class="p">,</span><span class="o">*</span><span class="n">where_is_edge</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">edge_directory</span><span class="p">)]</span> 
-                      <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">progress_func</span><span class="p">(</span><span class="n">edge_ids</span><span class="p">)])</span>
+                      <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">edge_ids</span><span class="p">)])</span>
     
     <span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:],</span>
                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span><span class="s2">&quot;end&quot;</span><span class="p">],</span>
@@ -221,7 +237,7 @@
     <span class="k">return</span> <span class="n">edges</span>
         
 <div class="viewcode-block" id="vertices"><a class="viewcode-back" href="../../API.html#icenumerics.vertices">[docs]</a><span class="k">class</span> <span class="nc">vertices</span><span class="p">():</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ice</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">id_label</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">static</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ice</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">id_label</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">static</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Initializes the vertices array.</span>
 <span class="sd">        Initialization method for the vertices class. </span>
 <span class="sd">        Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using &quot;colloids_to_vertices&quot;, &quot;spins_to_vertices&quot;, or &quot;trj_to_vertices&quot;. </span>
@@ -284,7 +300,6 @@
     
     <span class="k">def</span> <span class="nf">update_directions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ice</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Updates the directions of the vertices using an ice object &quot;&quot;&quot;</span>
-        
         <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
         <span class="n">spins</span> <span class="o">=</span> <span class="n">ice_to_spins</span><span class="p">(</span><span class="n">ice</span><span class="p">)</span>
         
@@ -333,7 +348,7 @@
         
         <span class="k">return</span> <span class="bp">self</span>
     
-    <span class="k">def</span> <span class="nf">trj_to_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trj</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">id_label</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">static</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">trj_to_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trj</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">id_label</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">static</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Convert a trj into a vertex array. </span>
 <span class="sd">        If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers. </span>
 <span class="sd">        ---------</span>
@@ -342,33 +357,38 @@
 <span class="sd">        * id_label (string, &quot;id&quot;): If the index of `trj` has more than one level, this is the name of the level that identifies particles.</span>
 <span class="sd">        * static (boolean, True): If the topology of the traps doesn&#39;t change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-                
+         
         <span class="k">def</span> <span class="nf">trj_to_vertices_single_frame</span><span class="p">(</span><span class="n">trj_frame</span><span class="p">):</span>
             
             <span class="n">spins</span> <span class="o">=</span> <span class="n">ice_to_spins</span><span class="p">(</span><span class="n">trj_frame</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">infer_topology</span><span class="p">(</span><span class="n">spins</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="n">positions</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_directions</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span> 
+                
             <span class="k">else</span><span class="p">:</span> 
                 <span class="bp">self</span><span class="o">.</span><span class="n">update_directions</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span> 
                 
             <span class="bp">self</span><span class="o">.</span><span class="n">classify_vertices</span><span class="p">(</span><span class="n">spins</span><span class="p">)</span>
             
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             
         <span class="k">if</span> <span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
                         
-            <span class="n">trj_to_vertices_single_frame</span><span class="p">(</span><span class="n">trj</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="n">trj_to_vertices_single_frame</span><span class="p">(</span><span class="n">trj</span><span class="p">)</span>
             
             <span class="k">return</span> <span class="bp">self</span>
             
         <span class="k">else</span><span class="p">:</span>
                 
-            <span class="n">id_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">([</span><span class="n">n</span><span class="o">==</span><span class="s2">&quot;id&quot;</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">])</span>
+            <span class="n">id_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">([</span><span class="n">n</span><span class="o">==</span><span class="n">id_label</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">])</span>
             <span class="n">other_i</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
             <span class="n">other_i</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">other_i</span><span class="p">[</span><span class="n">id_i</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
             
-            <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_array</span> <span class="o">=</span> <span class="n">trj</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">other_i</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">trj_to_vertices_single_frame</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_array</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                    <span class="p">{</span><span class="n">o_i</span><span class="p">:</span><span class="n">trj_to_vertices_single_frame</span><span class="p">(</span><span class="n">trj_oi</span><span class="p">)</span> <span class="k">for</span> <span class="n">o_i</span><span class="p">,</span> <span class="n">trj_oi</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">trj</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">other_i</span><span class="p">))},</span>
+                    <span class="n">names</span> <span class="o">=</span> <span class="n">other_i</span><span class="p">)</span>
+            
             <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_array</span>
             
             <span class="k">return</span> <span class="bp">self</span>
@@ -379,7 +399,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">sl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">sl</span> <span class="o">=</span> <span class="n">sl</span><span class="o">+</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span>
+            
         <span class="k">else</span><span class="p">:</span> 
             <span class="n">sl</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         
