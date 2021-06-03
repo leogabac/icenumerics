@@ -147,3 +147,150 @@ def get_ice_trj_low_memory(col):
             mode = mode, header = header)
         mode = "a"
         header = False
+
+def draw_frame(trj, frame_no = -1, region = None, radius = None, ax = None, sim = None, atom_type = 1, trap_type = 2, cutoff = None, trap_color = "blue", particle_color = "white"):
+
+    if ax is None:
+        fig, ax = plt.subplots(1,1,figsize = (2,2), dpi = 150)
+
+    if sim is not None:
+        units =  sim.traps.cutoff.units
+
+        region = [r.to(units).magnitude for r in sim.world.region]
+        radius = sim.particles.radius.to(units).magnitude
+        atom_type = sim.particles.atom_type+1
+        trap_type = sim.traps.atom_type+1
+        cutoff = sim.traps.cutoff.to(units).magnitude
+
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+    ax.set_xlim(region[0],region[1])
+    ax.set_ylim(region[2],region[3])
+    ax.set(aspect='equal')
+
+    frames = trj.index.get_level_values("frame").unique()
+
+    if "type" in trj.columns:
+        atoms = trj[trj.type==atom_type]
+        traps = trj[trj.type==trap_type]
+    else:
+        atoms = trj.loc[:,["x","y","z"]]+trj.loc[:,["cx","cy","cz"]].values
+        trj = trj.drop(columns={"mux","muy","muz"})
+        traps = trj.rename(columns = {"dx":"mux","dy":"muy","dz":"muz"})
+
+    patches = []
+
+    for i,t in traps.loc[idx[frames[frame_no],:],:].iterrows():
+
+        c = plt.Circle(
+            (t.x+t.mux/2,t.y+t.muy/2), cutoff,color = trap_color)
+        patches.append(c)
+        c = plt.Circle(
+            (t.x-t.mux/2,t.y-t.muy/2), cutoff,color = trap_color)
+        patches.append(c)
+        width = t.mux+2*np.abs(cutoff*(not np.abs(t.muy)<1e-10))
+        height = t.muy+2*np.abs(cutoff*(not np.abs(t.mux)<1e-10))
+        c = plt.Rectangle(
+            (t.x-width/2,t.y-height/2),
+            width = width, height = height,color = trap_color)
+        patches.append(c)
+
+    for i,a in atoms.loc[idx[frames[frame_no],:],:].iterrows():
+        c = plt.Circle((a.x,a.y), radius, facecolor = particle_color, edgecolor = "black")
+        patches.append(c)
+
+    for p in patches:
+        ax.add_patch(p)
+    return patches
+
+def animate(trj, sl = slice(0,-1,1), region = None, radius = None, ax = None, sim = None, atom_type = 1, trap_type = 2, cutoff = None, framerate = None, verb=False, start=0, end=False, step = 1, speedup = 1, preserve_limits = False):
+
+    if ax is None:
+        fig, ax = plt.subplots(1,1,figsize = (2,2), dpi = 150)
+    fig = ax.figure
+
+    if sim is not None:
+
+        units =  sim.traps.cutoff.units
+        region = [r.to(units).magnitude for r in sim.world.region]
+        radius = sim.particles.radius.to(units).magnitude
+        framerate = sim.framerate.magnitude
+        timestep = sim.timestep.magnitude
+        atom_type = sim.particles.atom_type+1
+        trap_type = sim.traps.atom_type+1
+        cutoff = sim.traps.cutoff.to(units).magnitude
+        if cutoff == np.inf:
+            cutoff=radius*1.1
+    if cutoff is None:
+        cutoff=radius*1.1
+
+    if not preserve_limits:
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
+        ax.set_xlim(region[0],region[1])
+        ax.set_ylim(region[2],region[3])
+        ax.set(aspect='equal')
+
+    frames = trj.index.get_level_values("frame").unique()
+    frames = frames[sl]
+
+    dt_video = 1000/framerate/speedup # video timestep in miliseconds
+
+
+    if "type" in trj.columns:
+        atoms = trj[trj.type==atom_type]
+        traps = trj[trj.type==trap_type]
+    else:
+        atoms = trj.loc[:,["x","y","z"]]+trj.loc[:,["cx","cy","cz"]].values
+        traps = trj.rename(columns = {"dx":"mux","dy":"muy","dz":"muz"})
+
+    patches = []
+
+    atom_patches = []
+    trap_patches = []
+
+    for i,a in atoms.loc[idx[frames[0],:],:].iterrows():
+        c = plt.Circle((0,0), radius, facecolor = "white", edgecolor = "black")
+        atom_patches.append(c)
+
+    for i,t in traps.loc[idx[frames[0],:],:].iterrows():
+
+        c = plt.Circle(
+            (t.x+t.mux/2,t.y+t.muy/2), cutoff,color = "blue")
+        trap_patches.append(c)
+
+        c = plt.Circle(
+            (t.x-t.mux/2,t.y-t.muy/2), cutoff,color = "blue")
+        trap_patches.append(c)
+        width = t.mux+2*np.abs(cutoff*(not np.abs(t.muy)<1e-10))
+        height = t.muy+2*np.abs(cutoff*(not np.abs(t.mux)<1e-10))
+        c = plt.Rectangle(
+            (t.x-width/2,t.y-height/2),
+            width = width, height = height,color = "blue")
+        trap_patches.append(c)
+
+    def init():
+        for t in trap_patches:
+            ax.add_patch(t)
+        for a in atom_patches:
+            ax.add_patch(a)
+        return trap_patches+atom_patches
+
+
+    def update(frame):
+        if verb:
+            print("frame[%u] is "%frame,frames[frame])
+
+        for i,((f,ind),atom)in enumerate(atoms.loc[idx[frames[frame],:],:].iterrows()):
+            atom_patches[i].center = (atom.x,atom.y)
+            #print(atom_patches[i].center)
+        for a in atom_patches:
+            ax.add_patch(a)
+
+        return atom_patches
+
+    anim = mpl.animation.FuncAnimation(fig, update, init_func=init,
+                                   frames=len(frames), interval=int(round(dt_video)), blit=True);
+    plt.close(anim._fig)
+
+    return anim

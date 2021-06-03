@@ -9,8 +9,21 @@ import matplotlib
 import scipy.spatial as sptl
 import pandas as pd
 
-import tqdm.notebook as tqdm
+import tqdm.auto as tqdm
 
+def count_vertices(vrt, column = "type", time = "frame"):
+    vrt_count = vrt.groupby([time,column]).count().iloc[:,0].to_frame("number")
+
+    vrt_count = vrt_count.reindex(pd.MultiIndex.from_product(
+        [vrt_count.index.get_level_values(time).unique(),
+         vrt_count.index.get_level_values(column).unique()]), fill_value = 0)
+
+    total_vrt = vrt_count.groupby(time).sum()
+    vrt_count["fraction"] = vrt_count.number / \
+        total_vrt.loc[vrt_count.index.get_level_values(time)].number.values
+
+    return vrt_count
+    
 def spin_crossing_point(S1,S2):
     # This works well in 2d. In 3d it's triciker
     if not (S1['Direction']==S2['Direction']).all():
@@ -139,11 +152,14 @@ def where_is_edge(e, edge_directory):
         
     return vertices
 
-def update_edge_directions(edges, spins, positions):
+def update_edge_directions(edges, spins, positions, verb = False):
     """ Map the 'spins' to the edge directions in 'edges'. """
-
-
-    for i,e in tqdm.tqdm(edges.iterrows(), len(edges)):
+    
+    progress = lambda x, **kargs: x
+    if verb:
+        progress = tqdm.tqdm
+        
+    for i,e in progress(edges.iterrows(), total = len(edges)):
 
         spin_direction = spins["Direction"][e.name]
 
@@ -160,7 +176,7 @@ def update_edge_directions(edges, spins, positions):
 
         if np.dot(spin_direction,vertex_join)<0:
             ## flip edge
-            e[["start","end"]] = e[["end","start"]]
+            edges.loc[i,["start","end"]] = edges.loc[i,["end","start"]].values
 
     return edges
 
@@ -168,11 +184,11 @@ def create_edge_array(edge_directory, spins = None, positions = None):
     """ Retrieve the edge array from the edge_directory. 
     If spins and positions are given they are used to calculate the directions of the edges. 
     """
-
-    edge_ids = np.unique(np.array([e for v in edge_directory for e in tqdm.tqdm(edge_directory[v])]))
+    
+    edge_ids = np.unique(np.array([e for v in tqdm.tqdm(edge_directory) for e in edge_directory[v]]))
     
     edges = np.array([[e,*where_is_edge(e, edge_directory)] 
-                      for e in progress_func(edge_ids)])
+                      for e in tqdm.tqdm(edge_ids)])
     
     edges = pd.DataFrame(data = edges[:,1:],
                          columns=["start","end"],
@@ -184,7 +200,7 @@ def create_edge_array(edge_directory, spins = None, positions = None):
     return edges
         
 class vertices():
-    def __init__(self, positions = None, edges = None, ice = None, id_label = "id", static = True, ):
+    def __init__(self, positions = None, edges = None, ice = None, id_label = "id", static = True):
         """ Initializes the vertices array.
         Initialization method for the vertices class. 
         Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using "colloids_to_vertices", "spins_to_vertices", or "trj_to_vertices". 
@@ -247,7 +263,6 @@ class vertices():
     
     def update_directions(self, ice):
         """ Updates the directions of the vertices using an ice object """
-        
         positions = self.vertices.loc[:,["x","y"]].values
         spins = ice_to_spins(ice)
         
@@ -296,7 +311,7 @@ class vertices():
         
         return self
     
-    def trj_to_vertices(self, trj, positions = None, id_label = None, static = True):
+    def trj_to_vertices(self, trj, positions = None, id_label = "id", static = True):
         """ Convert a trj into a vertex array. 
         If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers. 
         ---------
@@ -305,33 +320,38 @@ class vertices():
         * id_label (string, "id"): If the index of `trj` has more than one level, this is the name of the level that identifies particles.
         * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.
         """
-                
+         
         def trj_to_vertices_single_frame(trj_frame):
             
             spins = ice_to_spins(trj_frame)
             
             if len(self.vertices)==0:
                 self.infer_topology(spins, positions=positions)
+                self.update_directions(spins) 
+                
             else: 
                 self.update_directions(spins) 
                 
             self.classify_vertices(spins)
             
-            return self.vertices
+            return self.vertices.copy(deep=True)
             
         if trj.index.nlevels==1:
                         
-            trj_to_vertices_single_frame(trj)
+            self.vertices = trj_to_vertices_single_frame(trj)
             
             return self
             
         else:
                 
-            id_i = np.where([n=="id" for n in trj.index.names])
+            id_i = np.where([n==id_label for n in trj.index.names])
             other_i = list(trj.index.names)
             other_i.remove(other_i[id_i[0][0]])
             
-            self.dynamic_array = trj.groupby(other_i).apply(trj_to_vertices_single_frame)
+            self.dynamic_array = pd.concat(
+                    {o_i:trj_to_vertices_single_frame(trj_oi) for o_i, trj_oi in tqdm.tqdm(trj.groupby(other_i))},
+                    names = other_i)
+            
             self.vertices = self.dynamic_array
             
             return self
@@ -342,7 +362,7 @@ class vertices():
         if self.vertices.index.nlevels>1:
             if sl is None:
                 sl = self.vertices.index[-1][:-1]
-            sl = sl+(slice(None),)
+            
         else: 
             sl = slice(None)
         
