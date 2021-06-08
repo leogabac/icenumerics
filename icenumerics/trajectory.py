@@ -139,7 +139,7 @@ def get_ice_trj_low_memory(col):
     header = True
     col.sim.load(read_trj=False)
 
-    for i,t in tqdm.tqdms(enumerate(col.sim.lazy_read.T),
+    for i,t in tqdm.tqdm(enumerate(col.sim.lazy_read.T),
                                 total = len(col.sim.lazy_read.T),
                                 desc = "Iterating through file" ):
         get_ice_trj_single(col,i)[0].to_csv(
