@@ -19,4 +19,5 @@ Welcome to icenumerics's documentation!
    OtherNotebooks/ForcesOfTheSimulation
    OtherNotebooks/CalculateEnergy
    OtherNotebooks/SimulationsWithVariableField
+   OtherNotebooks/PolydisperseSystems
    API
