@@ -23,7 +23,7 @@ def count_vertices(vrt, column = "type", time = "frame"):
         total_vrt.loc[vrt_count.index.get_level_values(time)].number.values
 
     return vrt_count
-    
+
 def spin_crossing_point(S1,S2):
     # This works well in 2d. In 3d it's triciker
     if not (S1['Direction']==S2['Direction']).all():
@@ -61,9 +61,9 @@ def unique_points(points,tol = 0.1):
             inverse[same_point_copies] = len(unique_points)-1
 
     unique_points = np.array(unique_points)
-        
+
     return unique_points, inverse, copies_assigned
-    
+
 def colloidal_ice_vector(C):
     """Extracts an array of centers and directions from a Colloidal Ice System"""
     Vectors = np.array(np.zeros(len(C)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
@@ -72,7 +72,7 @@ def colloidal_ice_vector(C):
         Vectors[i] = (c.center[0:2].magnitude,c.direction[0:2])
         i=i+1
     return Vectors
-    
+
 def spin_ice_vector(S):
     """Extracts an array of centers and directions from a Spin Ice System"""
     Vectors = np.array(np.zeros(len(S)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
@@ -81,21 +81,21 @@ def spin_ice_vector(S):
         Vectors[i] = (s.center[0:2],s.direction[0:2])
         i=i+1
     return Vectors
-    
+
 def trj_ice_vector(trj_frame):
     """Extracts an array of centers and directions from a frame in a trj"""
-    
+
     Vectors = np.array(np.zeros(len(trj_frame)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
     Vectors["Center"] = trj_frame.loc[:,["x","y"]]
-    
+
     d = np.sqrt((trj_frame.loc[:,["dx","dy"]]**2).sum(axis=1))
     Vectors["Direction"] = trj_frame[["dx","dy"]].div(d, axis=0)
-    
+
     return Vectors
-        
+
 def calculate_neighbor_pairs(Centers):
     """This function makes a list of all the Pairs of Delaunay Neighbors from an array of points"""
-    
+
     tri = sptl.Delaunay(Centers)
 
     # List all Delaunay neighbors in the system
@@ -116,14 +116,14 @@ def from_neighbors_get_nearest_neighbors(NeighborPairs):
     # This function takes a list of Delaunay Neighbor Pairs and returns only those which are close to the minimum distance.
     NeighborPairs['Distance']=np.around(NeighborPairs['Distance'],decimals=4)
     NeighborPairs = NeighborPairs[NeighborPairs['Distance']<=np.min(NeighborPairs['Distance'])*1.1]
-    
+
     return NeighborPairs
 
 def get_vertices_positions(NeighborPairs,spins):
-    # From a list of Spins, get neighboring spins, and get the crossing point of each, which defines a vertex.  
+    # From a list of Spins, get neighboring spins, and get the crossing point of each, which defines a vertex.
     for i,n in enumerate(NeighborPairs):
         NeighborPairs[i]['Vertex'] = spin_crossing_point(spins[n['Pair'][0]],spins[n['Pair'][1]])[0:2]
-    
+
     return NeighborPairs
 
 def ice_to_spins(ice, id_label=None):
@@ -136,35 +136,35 @@ def ice_to_spins(ice, id_label=None):
         spins = trj_ice_vector(ice)
     elif ice.__class__.__name__ == "ndarray":
         spins = ice
-    
-    return spins 
+
+    return spins
 
 def where_is_edge(e, edge_directory):
     """ What vertex in the edge directory contains the edge 'e'. """
-    
+
     vertices = [i for i in edge_directory if np.isin(e, edge_directory[i])]
-    
+
     if len(vertices)==1:
         vertices.append(-1)
     if len(vertices)!=2:
         print(vertices)
         raise ValueError("edges can only join two vertices")
-        
+
     return vertices
 
 def update_edge_directions(edges, spins, positions, verb = False):
     """ Map the 'spins' to the edge directions in 'edges'. """
-    
+
     progress = lambda x, **kargs: x
     if verb:
         progress = tqdm.tqdm
-        
+
     for i,e in progress(edges.iterrows(), total = len(edges)):
 
         spin_direction = spins["Direction"][e.name]
 
         if (e<0).any():
-            # This happens when a single vertex is assigned to an edge 
+            # This happens when a single vertex is assigned to an edge
             vertex = e[e>=0]
             if vertex.index[0]=="start":
                 vertex_join = spins["Center"][e.name]-positions[vertex[0]]
@@ -181,111 +181,115 @@ def update_edge_directions(edges, spins, positions, verb = False):
     return edges
 
 def create_edge_array(edge_directory, spins = None, positions = None):
-    """ Retrieve the edge array from the edge_directory. 
-    If spins and positions are given they are used to calculate the directions of the edges. 
+    """ Retrieve the edge array from the edge_directory.
+    If spins and positions are given they are used to calculate the directions of the edges.
     """
-    
+
     edge_ids = np.unique(np.array([e for v in tqdm.tqdm(edge_directory) for e in edge_directory[v]]))
-    
-    edges = np.array([[e,*where_is_edge(e, edge_directory)] 
+
+    edges = np.array([[e,*where_is_edge(e, edge_directory)]
                       for e in tqdm.tqdm(edge_ids)])
-    
+
     edges = pd.DataFrame(data = edges[:,1:],
                          columns=["start","end"],
                          index=pd.Index(edges[:,0],name="edge"))
-    
+
     if spins is not None and positions is not None:
         edges = update_edge_directions(edges,spins,positions)
-    
+
     return edges
-        
+
 class vertices():
     def __init__(self, positions = None, edges = None, ice = None, id_label = "id", static = True):
         """ Initializes the vertices array.
-        Initialization method for the vertices class. 
-        Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using "colloids_to_vertices", "spins_to_vertices", or "trj_to_vertices". 
-        If an object is given to create a vertex array, do so. 
+        Initialization method for the vertices class.
+        Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using "colloids_to_vertices", "spins_to_vertices", or "trj_to_vertices".
+        If an object is given to create a vertex array, do so.
         ---------
         Parameters:
         * positions: Ordered list containing the geometry of the vertices.
-        * edges: Ordered list, or disordered set, containing the pairs of vertices that are joined. 
-        * ice (colloidal_ice object, trj dataframe, spin_ice object): Initializes the topology, inferring from the input. 
+        * edges: Ordered list, or disordered set, containing the pairs of vertices that are joined.
+        * ice (colloidal_ice object, trj dataframe, spin_ice object): Initializes the topology, inferring from the input.
             * colloidal_ice (colloidal_ice object, optional): Initalizes the vertices from a colloidal_ice object
             * spin_ice (spin_ice object, optional): Initializes the vertices from a spin_ice object
-            * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. 
+            * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced.
         * id_label (string, optional): If the index of `trj` has more than one level, this is the name of the level that identifies particles. Defaults to "id".
         * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex. False is not implemented
-        
-        Attributes: 
-        * vertices (DataFrame): contains the possitions of the vertices, plus whatever properties have been calculated. 
-        * edges (DataFrame): contains the pairs of vertices that are connected. The edges are directed and go from the first vertex to the second vertex. 
+
+        Attributes:
+        * vertices (DataFrame): contains the possitions of the vertices, plus whatever properties have been calculated.
+        * edges (DataFrame): contains the pairs of vertices that are connected. The edges are directed and go from the first vertex to the second vertex.
         * edge_directory (dict): indicates which vertices are formed by which edges. The index is the edge number. Each entry contains a list of vertices.
         """
-        
+
         self.vertices = pd.DataFrame({"x":[],"y":[]},
                             index = pd.Index([],name="vertex"))
         self.edges = pd.DataFrame({"start":[],"end":[]},
                              index = pd.Index([],name="edge"))
         self.edge_directory = {}
-            
+
         if positions is not None:
             self.vertices.x = positions[:,0]
             self.vertices.y = positions[:,1]
-            
+
         if edges is not None:
             self.edges.start = edges[:,0]
             self.edges.end = edges[:,1]
-                        
+
+            self.edge_directory = {
+                i:self.edges.query("start==@i | end==@i").index.values
+                for i,v in self.vertices.iterrows()}
+
     def infer_topology(self, ice, positions=None, method = "crossings", tolerance = 0.01):
         """ Infer the topology from the spin structure.
         ------------
         Parameters:
-        input: object to get the spins from. 
-        positions (optional): 
-        method (string, "crossings"): Method to infer the positions of the vertices. 
-            * "crossings" defines vertices as being in the crossing points of two spins. This is illdefined in more than 2D. 
-            * "voronoi" defines vertices as being in the corners of the voronoi tesselation of  
+        input: object to get the spins from.
+        positions (optional):
+        method (string, "crossings"): Method to infer the positions of the vertices.
+            * "crossings" defines vertices as being in the crossing points of two spins. This is illdefined in more than 2D.
+            * "voronoi" defines vertices as being in the corners of the voronoi tesselation of
         """
         spins = ice_to_spins(ice)
 
         neighbor_pairs = calculate_neighbor_pairs(spins['Center'])
         neighbor_pairs = from_neighbors_get_nearest_neighbors(neighbor_pairs)
         neighbor_pairs = get_vertices_positions(neighbor_pairs,spins)
-        
+
         positions, inverse, copies = unique_points(neighbor_pairs['Vertex'])
         self.vertices.x = positions[:,0]
         self.vertices.y = positions[:,1]
-        
-        self.edge_directory = {i:np.unique(neighbor_pairs[c]["Pair"].flatten()) 
+
+        self.edge_directory = {i:np.unique(neighbor_pairs[c]["Pair"].flatten())
                                 for i,c in enumerate(copies)}
 
-        self.edges = create_edge_array(self.edge_directory, spins, positions)   
-    
+        self.edges = create_edge_array(self.edge_directory, spins, positions)
+
     def update_directions(self, ice):
         """ Updates the directions of the vertices using an ice object """
         positions = self.vertices.loc[:,["x","y"]].values
         spins = ice_to_spins(ice)
-        
+
         self.edges = update_edge_directions(self.edges, spins, positions)
-        
+
     def calculate_coordination(self):
         """ Adds a column to the 'vertices' array with the vertex coordination """
         coordination = [len(self.edge_directory[vertex]) for vertex in self.vertices.index]
         self.vertices["coordination"] = coordination
-         
+
     def calculate_charge(self):
         """ Adds a column to the 'vertices' array with the vertex charge. """
-        
+
         self.vertices["charge"] = 0
 
         for v_id, vertex in self.vertices.iterrows():
             indegree = (self.edges.loc[self.edge_directory[v_id]].end==v_id).sum()
             outdegree = (self.edges.loc[self.edge_directory[v_id]].start==v_id).sum()
             self.vertices.loc[v_id,"charge"] = indegree-outdegree
-    
+
     def calculate_dipole(self, spins):
         """ Adds two column sto the 'vertices' array with the sum of the directions of the vertex components. """
-    
+
         self.vertices["dx"] = 0
         self.vertices["dy"] = 0
 
@@ -293,79 +297,81 @@ class vertices():
             self.vertices.loc[v_id,["dx","dy"]] = np.sum(np.array(
                         [spins["Direction"][e] for e in self.edge_directory[v_id]]),
                     axis=0)
-            
+
     def classify_vertices(self, spins):
-        
+
         self.calculate_coordination()
         self.calculate_charge()
         self.calculate_dipole(spins)
-         
+
         return self
 
     def colloids_to_vertices(self, col):
         """ Uses the col object to infer the topology of the vertices and to classify them."""
-        
+
         spins = ice_to_spins(col)
-        self.infer_topology(spins)
+        if len(self.vertices)==0:
+            self.infer_topology(spins)
+
         self.classify_vertices(spins)
-        
+
         return self
-    
+
     def trj_to_vertices(self, trj, positions = None, id_label = "id", static = True):
-        """ Convert a trj into a vertex array. 
-        If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers. 
+        """ Convert a trj into a vertex array.
+        If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers.
         ---------
-        Parameters: 
-        * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced. 
+        Parameters:
+        * trj (pd.DataFrame, optional): Initializes the vertices from a pandas array. The pandas array must have the columns [x y z] and [dx dy dz] from which the links direction will be deduced.
         * id_label (string, "id"): If the index of `trj` has more than one level, this is the name of the level that identifies particles.
         * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.
         """
-         
+
         def trj_to_vertices_single_frame(trj_frame):
-            
+
             spins = ice_to_spins(trj_frame)
-            
+
             if len(self.vertices)==0:
                 self.infer_topology(spins, positions=positions)
-                self.update_directions(spins) 
-                
-            else: 
-                self.update_directions(spins) 
-                
+                self.update_directions(spins)
+
+            else:
+                self.update_directions(spins)
+
             self.classify_vertices(spins)
-            
+
             return self.vertices.copy(deep=True)
-            
+
         if trj.index.nlevels==1:
-                        
+
             self.vertices = trj_to_vertices_single_frame(trj)
-            
+
             return self
-            
+
         else:
-                
+
             id_i = np.where([n==id_label for n in trj.index.names])
             other_i = list(trj.index.names)
             other_i.remove(other_i[id_i[0][0]])
-            
+
             self.dynamic_array = pd.concat(
                     {o_i:trj_to_vertices_single_frame(trj_oi) for o_i, trj_oi in tqdm.tqdm(trj.groupby(other_i))},
                     names = other_i)
-            
+
             self.vertices = self.dynamic_array
-            
+
             return self
-    
+
     def display(self, ax = None, DspCoord = False, dpl_scale = 1, dpl_width = 5, sl=None):
-        
-        
+
+
         if self.vertices.index.nlevels>1:
             if sl is None:
                 sl = self.vertices.index[-1][:-1]
-            
-        else: 
+
+        else:
             sl = slice(None)
-        
+
         vertices = self.vertices.loc[sl]
 
         if ax is None:
@@ -383,25 +389,25 @@ class vertices():
                 if v.charge==0:
                     X = v.x
                     Y = v.y
-                    
+
                     DX = v['dx']*dpl_scale
                     DY = v['dy']*dpl_scale
                     ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=dpl_width,fc='k'))
-                
-        if DspCoord: 
+
+        if DspCoord:
             for v in vertices.iterrows:
                 if v['charge']>0:
                     c = 'r'
                 else:
                     c = 'b'
-                    
+
                 ax.add_patch(patches.Circle((v.x,v.y),radius = abs(v['charge'])*2,
                     ec='none', fc=c))
-                    
+
                 X = v.x
                 Y = v.y
-        
-        #ax.set_aspect("equal")    
+
+        #ax.set_aspect("equal")
         #plt.axis("equal")
 
 #### Graph Class Definition ####
@@ -420,11 +426,11 @@ class graph():
             ax = plt.gca()
 
         ax.plot(self.vertices.x,self.vertices.y,'o')
-        
+
         if decimation is not None:
             ax.plot(self.vertices.loc[decimation.values.flatten()].x,
                         self.vertices.loc[decimation.values.flatten()].y, '.')
-            
+
 
         centers, directions = self.spins()
 
@@ -506,12 +512,12 @@ class graph():
         rm_edges = rm_edges.append(edge)
 
         return rm_edges
-    
+
     def undo_decimation(self,rm_edges):
         """ Replace the last edge that was removed (it shoud be the last in the list)"""
-        
+
         if len(rm_edges)>0:
-        
+
             edge = self.edge_dec
             self.edge_dec = None
             self.edges = self.edges.append(edge)
@@ -520,9 +526,9 @@ class graph():
             self.edge_directory[edge["v_2"].values[0]].append(edge.index.values[0])
 
             rm_edges = rm_edges.drop(edge.index)
-            
+
         return rm_edges
-        
+
     def permutation(self,rm_edges):
         """ Remove a random edge and place it elsewhere"""
         self.latest = "permutation"
@@ -554,7 +560,7 @@ class graph():
 
             edge_out = self.edge_permute[1]
             edge_in = self.edge_permute[0]
-            
+
             self.edge_permute = None
 
             self.edges = self.edges.append(edge_in)
@@ -570,13 +576,13 @@ class graph():
             rm_edges = rm_edges.append(edge_out)
 
         return rm_edges
-        
+
     def refilling(self,rm_edges):
         """ Replace an edge from the list rm_edges"""
         self.latest = "refilling"
-        
+
         if len(rm_edges)>0:
-            
+
             self.edge_refill = rm_edges.loc[[rand.choice(rm_edges.index)]]
             edge = self.edge_refill
             self.edges = self.edges.append(edge)
@@ -587,13 +593,13 @@ class graph():
             rm_edges = rm_edges.drop(edge.index)
 
         return rm_edges
-    
+
     def undo_refilling(self, rm_edges):
         """ remove the last link which was replaced """
-        
+
         edge = self.edge_refill
         self.edge_refill = None
-        
+
         self.edges = self.edges.drop(edge.index)
 
         self.edge_directory[edge["v_1"].values[0]].remove(edge.index)
@@ -602,7 +608,7 @@ class graph():
         rm_edges = rm_edges.append(edge)
 
         return rm_edges
-        
+
     def undo(self, rm_edges):
         if self.latest == "decimation":
             return self.undo_decimation(rm_edges)
@@ -610,7 +616,7 @@ class graph():
             return self.undo_permutation(rm_edges)
         if self.latest == "refilling":
             return self.undo_refilling(rm_edges)
-            
+
     def copy(self, deep=True):
         if deep:
             return cp.deepcopy(self)
