@@ -51,9 +51,9 @@ def get_ice_trj(trj,bounds, atom_types = None, trap_types = None):
         traps = trj[trj.type.isin([trap_types])].copy(deep=True)
 
     try:
-        atoms = trj[trj.type.isin(atom_types)].copy(deep=True)
+        atoms = trj[~trj.type.isin(trap_types)].copy(deep=True)
     except TypeError:
-        atoms = trj[trj.type.isin([atom_types])].copy(deep=True)
+        atoms = trj[~trj.type.isin([trap_types])].copy(deep=True)
 
     traps = traps.rename(columns = {"mux":"dx","muy":"dy","muz":"dz"})
     atoms = unwrap_trj(atoms.filter(["x","y","z"]),bounds.loc[[0]])

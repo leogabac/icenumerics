@@ -41,7 +41,7 @@ def spin_crossing_point(S1,S2):
     else:
         return np.Inf+np.zeros(np.shape(S1['Center']))
 
-def unique_points(points,tol = 0.1):
+def unique_points(points, tol = 1):
     """Returns only the distinct points (with a tolerance)."""
     flatten = lambda lst: [el for l in lst for el in l]
 
@@ -167,9 +167,9 @@ def update_edge_directions(edges, spins, positions, verb = False):
             # This happens when a single vertex is assigned to an edge
             vertex = e[e>=0]
             if vertex.index[0]=="start":
-                vertex_join = spins["Center"][e.name]-positions[vertex[0]]
+                vertex_join = spins["Center"][e.name]-positions[vertex.iloc[0]]
             elif vertex.index[0]=="end":
-                vertex_join = positions[vertex[0]]-spins["Center"][e.name]
+                vertex_join = positions[vertex.iloc[0]]-spins["Center"][e.name]
 
         else:
             vertex_join = positions[e["end"]]-positions[e["start"]]
@@ -240,7 +240,7 @@ class vertices():
                 i:self.edges.query("start==@i | end==@i").index.values
                 for i,v in self.vertices.iterrows()}
 
-    def infer_topology(self, ice, positions=None, method = "crossings", tolerance = 0.01):
+    def infer_topology(self, ice, positions=None, method = "crossings", tol = 0.01):
         """ Infer the topology from the spin structure.
         ------------
         Parameters:
@@ -256,7 +256,9 @@ class vertices():
         neighbor_pairs = from_neighbors_get_nearest_neighbors(neighbor_pairs)
         neighbor_pairs = get_vertices_positions(neighbor_pairs,spins)
 
-        positions, inverse, copies = unique_points(neighbor_pairs['Vertex'])
+        positions, inverse, copies = unique_points(
+            neighbor_pairs['Vertex'],
+            tol = tol)
         self.vertices.x = positions[:,0]
         self.vertices.y = positions[:,1]
 
@@ -288,10 +290,10 @@ class vertices():
             self.vertices.loc[v_id,"charge"] = indegree-outdegree
 
     def calculate_dipole(self, spins):
-        """ Adds two column sto the 'vertices' array with the sum of the directions of the vertex components. """
+        """ Adds two columns to the 'vertices' array with the sum of the directions of the vertex components. """
 
-        self.vertices["dx"] = 0
-        self.vertices["dy"] = 0
+        self.vertices["dx"] = 0.0
+        self.vertices["dy"] = 0.0
 
         for v_id, vertex in self.vertices.iterrows():
             self.vertices.loc[v_id,["dx","dy"]] = np.sum(np.array(
@@ -306,12 +308,12 @@ class vertices():
 
         return self
 
-    def colloids_to_vertices(self, col):
+    def colloids_to_vertices(self, col, tol = 0.1):
         """ Uses the col object to infer the topology of the vertices and to classify them."""
 
         spins = ice_to_spins(col)
         if len(self.vertices)==0:
-            self.infer_topology(spins)
+            self.infer_topology(spins, tol = tol)
 
         self.classify_vertices(spins)
 
