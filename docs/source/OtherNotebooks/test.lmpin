@@ -13,8 +13,6 @@ bond_style biharmonic
 read_data ./test.lmpdata
 group Atoms type 1 
 group Traps type 2 
-
-group Traps type 3 
 mass * 1
 group Atoms_1 type 1 
 
@@ -33,7 +31,7 @@ variable fieldz atom v_Bmag*cos(v_theta)
 ### ---Fixes--- ###
 
 fix 	1 Atoms setdipole v_fieldx v_fieldy v_fieldz 0
-fix 	2 Atoms bd 300 0.001 165825 
+fix 	2 Atoms bd 300 0.001 552314 
 
 fix 	3 Atoms addforce 0 0 -0.0 
 
@@ -41,7 +39,7 @@ fix 	5 all enforce2d_bd
 
 ### ---Run Commands--- ###
 timestep 	10000.0 
-dump 	3 all custom 10 ./test.lammpstrj id type x	 y	 z	 mux	 muy	 muz
+dump 	3 all custom 1 ./test.lammpstrj id type x	 y	 z
 thermo_style 	custom step atoms
 thermo 	100  
-run 	1000 
+run 	6000 

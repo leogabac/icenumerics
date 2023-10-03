@@ -6,7 +6,7 @@ boundary s s p
 dimension 2 
 neighbor 1.0 nsq 
 neigh_modify every 1 delay 1 check yes
-pair_style hybrid lj/cut/dipole/cut 0 200 
+pair_style hybrid lj/cut/dipole/cut 0 20 
 bond_style biharmonic 
 
 ### ---Create Particles and Region--- ###
@@ -31,7 +31,7 @@ variable fieldz atom v_Bmag*cos(v_theta)
 ### ---Fixes--- ###
 
 fix 	1 Atoms setdipole v_fieldx v_fieldy v_fieldz 0
-fix 	2 Atoms bd 300 0.001 737354 
+fix 	2 Atoms bd 300 0.001 685543 
 
 fix 	3 Atoms addforce 0 0 -0.0 
 
