@@ -4,9 +4,10 @@ units micro
 atom_style hybrid ellipsoid paramagnet bond 
 boundary s s p 
 dimension 2 
-neighbor 4.0 nsq 
+neighbor 1.0 nsq 
+neigh_modify every 1 delay 1 check yes
 pair_style hybrid lj/cut/dipole/cut 0 200 
-bond_style biharmonic
+bond_style biharmonic 
 
 ### ---Create Particles and Region--- ###
 read_data ./test.lmpdata
@@ -32,7 +33,7 @@ variable fieldz atom v_Bmag*cos(v_theta)
 ### ---Fixes--- ###
 
 fix 	1 Atoms setdipole v_fieldx v_fieldy v_fieldz 0
-fix 	2 Atoms bd 300 0.001 432408 
+fix 	2 Atoms bd 300 0.001 165825 
 
 fix 	3 Atoms addforce 0 0 -0.0 
 

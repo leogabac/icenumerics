@@ -66,7 +66,7 @@ def unique_points(points,tol = 0.1):
 
 def colloidal_ice_vector(C):
     """Extracts an array of centers and directions from a Colloidal Ice System"""
-    Vectors = np.array(np.zeros(len(C)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
+    Vectors = np.array(np.zeros(len(C)),dtype=[('Center',"float",(2,)),('Direction',"float",(2,))])
     i=0
     for c in C:
         Vectors[i] = (c.center[0:2].magnitude,c.direction[0:2])
@@ -75,7 +75,7 @@ def colloidal_ice_vector(C):
 
 def spin_ice_vector(S):
     """Extracts an array of centers and directions from a Spin Ice System"""
-    Vectors = np.array(np.zeros(len(S)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
+    Vectors = np.array(np.zeros(len(S)),dtype=[('Center',"float",(2,)),('Direction',"float",(2,))])
     i=0
     for s in S:
         Vectors[i] = (s.center[0:2],s.direction[0:2])
@@ -85,7 +85,7 @@ def spin_ice_vector(S):
 def trj_ice_vector(trj_frame):
     """Extracts an array of centers and directions from a frame in a trj"""
 
-    Vectors = np.array(np.zeros(len(trj_frame)),dtype=[('Center',np.float,(2,)),('Direction',np.float,(2,))])
+    Vectors = np.array(np.zeros(len(trj_frame)),dtype=[('Center',"float",(2,)),('Direction',"float",(2,))])
     Vectors["Center"] = trj_frame.loc[:,["x","y"]]
 
     d = np.sqrt((trj_frame.loc[:,["dx","dy"]]**2).sum(axis=1))
@@ -100,7 +100,7 @@ def calculate_neighbor_pairs(Centers):
 
     # List all Delaunay neighbors in the system
     NeighborPairs = np.array(np.zeros(2*np.shape(tri.simplices)[0]),
-                             dtype=[('Pair',np.int,(2,)),('Distance',np.float),('Vertex',np.float,(2,))])
+                             dtype=[('Pair',"int",(2,)),('Distance',"float"),('Vertex',"int",(2,))])
 
     i = 0
     for t in tri.simplices:
@@ -350,12 +350,23 @@ class vertices():
 
         else:
 
+            # This case runs when trj.index has more than one level.
+            # It automatically looks for the level that contains the particle ID
+            # and iterates along all other dimensions.
+            # This behavior is useful for batch processing.
+
             id_i = np.where([n==id_label for n in trj.index.names])
             other_i = list(trj.index.names)
             other_i.remove(other_i[id_i[0][0]])
 
+            if len(other_i)==1:
+                other_i_sc=other_i[0]
+            else:
+                other_i_sc=other_i
+
             self.dynamic_array = pd.concat(
-                    {o_i:trj_to_vertices_single_frame(trj_oi) for o_i, trj_oi in tqdm.tqdm(trj.groupby(other_i))},
+                    {o_i:trj_to_vertices_single_frame(trj_oi)
+                        for o_i, trj_oi in tqdm.tqdm(trj.groupby(other_i_sc))},
                     names = other_i)
 
             self.vertices = self.dynamic_array

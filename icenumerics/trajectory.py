@@ -20,7 +20,7 @@ def unwrap_trj(trj,bounds):
     for c in trj.columns:
         trj2[c] = (trj2[c] - bounds[c+"_min"].values)/(bounds[c+"_max"].values - bounds[c+"_min"].values)
 
-    trj2 = (trj2*2*np.pi).groupby("id").apply(unwrap)/(2*np.pi)
+    trj2 = (trj2*2*np.pi).groupby("id", group_keys=False).apply(unwrap)/(2*np.pi)
 
     for c in trj.columns:
         trj2[c] = trj2[c]*(bounds[c+"_max"].values - bounds[c+"_min"].values) + bounds[c+"_min"].values
@@ -37,47 +37,47 @@ def unwrap_frame(col_trj,bnd,axis):
 
 def get_ice_trj(trj,bounds, atom_types = None, trap_types = None):
     """ Converts lammps trj to ice trj
-    
+
     """
-    # in the trj dataframe, traps and atoms are labeled by different types. 
+    # in the trj dataframe, traps and atoms are labeled by different types.
     # for single trap type, and single particle type, the default behaviour is to have traps as type 2 and atoms as type 1.
-    # If the behaviour is not the default, it should be specified. 
+    # If the behaviour is not the default, it should be specified.
     if trap_types is None:
         trap_types = [2]
-       
-    try: 
+
+    try:
         traps = trj[trj.type.isin(trap_types)].copy(deep=True)
-    except TypeError: 
+    except TypeError:
         traps = trj[trj.type.isin([trap_types])].copy(deep=True)
-    
+
     try:
         atoms = trj[trj.type.isin(atom_types)].copy(deep=True)
     except TypeError:
         atoms = trj[trj.type.isin([atom_types])].copy(deep=True)
-    
+
     traps = traps.rename(columns = {"mux":"dx","muy":"dy","muz":"dz"})
     atoms = unwrap_trj(atoms.filter(["x","y","z"]),bounds.loc[[0]])
-    
+
     trj = []
-    
-    ## It turns out that the traps are not in the same order as the particles, when the system is bidisperse. 
+
+    ## It turns out that the traps are not in the same order as the particles, when the system is bidisperse.
     # we first reindex the traps so that they start at zero, and increase consecutively
     traps_id = traps.index.get_level_values("id").unique()
     reindex_traps = pd.Series({t:i for i, t in enumerate(traps_id)})
     traps.reset_index(inplace = True)
     traps.id = traps.id.map(reindex_traps)
     traps = traps.set_index(["frame","id"]).sort_index()
-    
+
     # we calculate the distance between traps and particles in the first frame,
     # and we build an atom index from the minimization of this distance
     distances = spa.distance.cdist(traps.loc[0,["x","y","z"]], atoms.loc[0,["x","y","z"]])
     reindex_atoms = pd.Series({a+1:t for a, t in enumerate(np.argmin(distances, axis = 0))})
-    
+
     # now we reindex the atoms
     atoms.reset_index(inplace = True)
     atoms.id = atoms.id.map(reindex_atoms)
     atoms = atoms.set_index(["frame","id"]).sort_index()
-    
+
     ## create a relative position vector. This goes from the center of the trap to the position of the particle
     colloids = atoms-traps
     colloids = colloids[["x","y","z"]]
