@@ -88,6 +88,7 @@ def get_ice_trj(trj,bounds, atom_types = None, trap_types = None):
 
     ## Flip those traps that are not pointing in the  direction of the colloids
     flip = np.sign((traps[["dx","dy","dz"]].values*traps[["cx","cy","cz"]].values).sum(axis=1))
+    flip[flip==0]=1
     traps[["dx","dy","dz"]] = traps[["dx","dy","dz"]].values*flip[:,np.newaxis]
 
     ## make the direction vector unitary
@@ -127,6 +128,7 @@ def get_ice_trj_single(col,i):
 
     ## Flip those traps that are not pointing in the  direction of the colloids
     flip = np.sign((traps[["dx","dy","dz"]].values*traps[["cx","cy","cz"]].values).sum(axis=1))
+    flip[flip==0]=1
     traps[["dx","dy","dz"]] = traps[["dx","dy","dz"]].values*flip[:,np.newaxis]
 
     ## make the direction vector unitary
