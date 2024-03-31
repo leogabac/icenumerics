@@ -466,6 +466,12 @@ class colloidal_ice(list):
                      columns = ["x","y","z","dx","dy","dz","cx","cy","cz"],
                      index = pd.Index(range(len(self)),name = "id"))
                   for f in frames], keys = frames, names = ["frame"])
+        
+    def to_ctrj(self):
+        return pd.DataFrame(data = np.array(
+            [np.concatenate([c.center.magnitude,c.direction,c.colloid.magnitude]) for c in self]),
+                     columns = ["x","y","z","dx","dy","dz","cx","cy","cz"],
+                     index = pd.Index(range(len(self)),name = "id"))
 
     def where(self,center,tol=None):
 

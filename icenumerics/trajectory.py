@@ -161,23 +161,38 @@ def get_ice_trj_low_memory_hdf(col):
 
         mode = "a"
 
-def get_ice_trj_low_memory(col):
+def get_ice_trj_low_memory(col, dir_name = None):
     import tqdm.notebook as tqdm
     name = os.path.split(col.sim.base_name)[1]
     mode = "w"
     header = True
     col.sim.load(read_trj=False)
 
-    for i,t in tqdm.tqdm(enumerate(col.sim.lazy_read.T),
-                                total = len(col.sim.lazy_read.T),
-                                desc = "Iterating through file" ):
-        get_ice_trj_single(col,i)[0].to_csv(
-            os.path.join(col.dir_name,name+".trj"), sep="\t",
-            mode = mode, header = header)
-        mode = "a"
-        header = False
+    if dir_name is None:
+        for i,t in tqdm.tqdm(enumerate(col.sim.lazy_read.T),
+                                    total = len(col.sim.lazy_read.T),
+                                    desc = "Iterating through file" ):
+            get_ice_trj_single(col,i)[0].to_csv(
+                os.path.join(col.dir_name,name+".trj"), sep="\t",
+                mode = mode, header = header)
+            mode = "a"
+            header = False
+    else:
+        for i,t in tqdm.tqdm(enumerate(col.sim.lazy_read.T),
+                                    total = len(col.sim.lazy_read.T),
+                                    desc = "Iterating through file" ):
+            get_ice_trj_single(col,i)[0].to_csv(
+                os.path.join(dir_name,name+".csv"),
+                mode = mode, header = header)
+            mode = "a"
+            header = False          
 
 def draw_frame(trj, frame_no = -1, region = None, radius = None, ax = None, sim = None, atom_type = 1, trap_type = 2, cutoff = None, trap_color = "blue", particle_color = "white"):
+    
+    # de donde viene el sim object?
+    # intente con col.sim, pero diosito sabra de donde viene
+    
+    idx = pd.IndexSlice
 
     if ax is None:
         fig, ax = plt.subplots(1,1,figsize = (2,2), dpi = 150)
@@ -204,13 +219,16 @@ def draw_frame(trj, frame_no = -1, region = None, radius = None, ax = None, sim 
         traps = trj[trj.type==trap_type]
     else:
         atoms = trj.loc[:,["x","y","z"]]+trj.loc[:,["cx","cy","cz"]].values
-        trj = trj.drop(columns={"mux","muy","muz"})
+        try:
+            trj = trj.drop(columns={"mux","muy","muz"})
+        except:
+            pass
         traps = trj.rename(columns = {"dx":"mux","dy":"muy","dz":"muz"})
 
     patches = []
 
     for i,t in traps.loc[idx[frames[frame_no],:],:].iterrows():
-
+        
         c = plt.Circle(
             (t.x+t.mux/2,t.y+t.muy/2), cutoff,color = trap_color)
         patches.append(c)

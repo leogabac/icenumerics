@@ -375,7 +375,7 @@ class vertices():
 
             return self
 
-    def display(self, ax = None, DspCoord = False, dpl_scale = 1, dpl_width = 5, sl=None):
+    def display(self, ax = None, DspCoord = False, dpl_scale = 1, dpl_width = 5, sl=None,circle_scale=2):
 
 
         if self.vertices.index.nlevels>1:
@@ -396,7 +396,7 @@ class vertices():
                     c = 'r'
                 else:
                     c = 'b'
-                ax.add_patch(patches.Circle((v.x,v.y),radius = abs(v['charge'])*2,
+                ax.add_patch(patches.Circle((v.x,v.y),radius = abs(v['charge'])*circle_scale,
                     ec='none', fc=c))
 
                 if v.charge==0:
@@ -414,7 +414,7 @@ class vertices():
                 else:
                     c = 'b'
 
-                ax.add_patch(patches.Circle((v.x,v.y),radius = abs(v['charge'])*2,
+                ax.add_patch(patches.Circle((v.x,v.y),radius = abs(v['charge'])*circle_scale,
                     ec='none', fc=c))
 
                 X = v.x
@@ -422,6 +422,42 @@ class vertices():
 
         #ax.set_aspect("equal")
         #plt.axis("equal")
+ 
+    def display_afgroup(self, ax = None, DspCoord = False, dpl_scale = 1, dpl_width = 5, sl=None,circle_scale=2):
+
+
+        if self.vertices.index.nlevels>1:
+            if sl is None:
+                sl = self.vertices.index[-1][:-1]
+
+        else:
+            sl = slice(None)
+
+        vertices = self.vertices.loc[sl]
+
+        if ax is None:
+            ax = plt.gca()
+            
+        
+        if not DspCoord:
+            for i,v in vertices.iterrows():
+                if np.abs(v.charge)==4:
+                    ax.add_patch(patches.Circle((v.x,v.y),radius = 4*circle_scale,ec='none', fc='limegreen'))
+                elif np.abs(v.charge)==2:
+                    ax.add_patch(patches.Circle((v.x,v.y),radius = 4*circle_scale,ec='none', fc='mediumorchid'))
+                else:
+                    X = v.x
+                    Y = v.y
+
+                    DX = v['dx']*dpl_scale
+                    DY = v['dy']*dpl_scale
+                    #ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=dpl_width,fc='k'))
+                    ax.add_patch(patches.Circle((v.x,v.y),radius = 2.5*circle_scale,ec='none', fc='k'))
+
+
+
+       
+
 
 #### Graph Class Definition ####
 class graph():
