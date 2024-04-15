@@ -451,8 +451,8 @@ class vertices():
 
                     DX = v['dx']*dpl_scale
                     DY = v['dy']*dpl_scale
-                    #ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=dpl_width,fc='k'))
-                    ax.add_patch(patches.Circle((v.x,v.y),radius = 2.5*circle_scale,ec='none', fc='k'))
+                    ax.add_patch(patches.Arrow(X-DX,Y-DY,2*DX,2*DY,width=dpl_width,fc='k'))
+                    #ax.add_patch(patches.Circle((v.x,v.y),radius = 2.5*circle_scale,ec='none', fc='k'))
 
 
 
