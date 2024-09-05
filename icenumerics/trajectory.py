@@ -461,11 +461,18 @@ def vrt_counts(vertices_dict):
     return {i:count_vertices(vertices) for i,vertices in vertices_dict.items()}
 
 def vrt_averages(data_path, max_frame=6000):
+    """
+        Gets the averages for all realizations.
+        ----------
+        Parameters:
+        * data_path
+        * max_frame (optional): in case we only want a subset of vertices.
+    """
     vertices = vrt_dict(data_path)
     counts = vrt_counts(vertices)
 
     # take all the fractions
-    # concat in a df 
+    # concat in a df
     # take average
     # get until max frame
     mean_counts = pd.concat(
@@ -475,5 +482,19 @@ def vrt_averages(data_path, max_frame=6000):
     return mean_counts
 
 def unstack(df,col_names = ['I','II','III','IV','V','VI']):
+    """
+        Unstacks the vertices counts so that we have types as columns and frames as rows.
+        In this way we can have accessible timeseries for the vertices.
+        ----------
+        Parameters:
+        * df: result from vrt_averages()
+        * col_names (optional)
+    """
     # try to at some point do this automatically
-    return pd.DataFrame(df.unstack(level='type').to_numpy(),columns=col_names)
+    frames = df.index.get_level_values('frame').unique().to_list()
+    unstacked = pd.DataFrame(df.unstack(level='type').to_numpy(),columns=col_names)
+    unstacked['frame'] = frames
+    return unstacked.set_index('frame')
+
+def test():
+    print('oli')
