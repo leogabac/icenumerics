@@ -301,12 +301,12 @@ class colloidal_ice(list):
 
             particle_types.append(mc.particles(
                 positions[np.array(inverse_p)==i],
-                atom_type = 0,
-                atoms_id = np.arange(len(colloids)),
-                radius = p.radius,
-                susceptibility = p.susceptibility,
-                drag = p.drag,
-                activity = p.activity))
+                atom_type=0,
+                atoms_id=np.arange(len(colloids)),
+                radius=p.radius,
+                susceptibility=p.susceptibility,
+                drag=p.drag,
+                activity=p.activity))
 
             particle_locations.append(p_id[np.array(inverse_p)==i])
 
@@ -347,7 +347,7 @@ class colloidal_ice(list):
             particle_types,trap_types,
             region=self.region.transpose().flatten(),
             walls=[False,False,False],
-            boundaries =  world.boundaries,
+            boundaries = world.boundaries,
             temperature = world.temperature,
             dipole_cutoff = world.dipole_cutoff,
             lj_cutoff = 0,
@@ -372,7 +372,6 @@ class colloidal_ice(list):
             "world":world_sim,
             "field":field,
             "processors":processors}
-
 
         self.name = name
         self.dir_name = targetdir

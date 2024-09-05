@@ -112,10 +112,11 @@ def calculate_neighbor_pairs(Centers):
 
     return NeighborPairs
 
-def from_neighbors_get_nearest_neighbors(NeighborPairs):
+def from_neighbors_get_nearest_neighbors(NeighborPairs,tol=1.1):
     # This function takes a list of Delaunay Neighbor Pairs and returns only those which are close to the minimum distance.
     NeighborPairs['Distance']=np.around(NeighborPairs['Distance'],decimals=4)
-    NeighborPairs = NeighborPairs[NeighborPairs['Distance']<=np.min(NeighborPairs['Distance'])*1.1]
+    print(tol)
+    NeighborPairs = NeighborPairs[NeighborPairs['Distance']<=np.min(NeighborPairs['Distance'])*tol]
 
     return NeighborPairs
 
@@ -203,7 +204,7 @@ class vertices():
     def __init__(self, positions = None, edges = None, ice = None, id_label = "id", static = True):
         """ Initializes the vertices array.
         Initialization method for the vertices class.
-        Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using "colloids_to_vertices", "spins_to_vertices", or "trj_to_vertices".
+        Vertices are defined by a set of positions, and a set of directed edges. If any of these are given, then the processing is easier. If they are not given they are inferred from the `input`. If the input is not given, the vertex object is initialized empty, but a topology can be added later by using "colloids_to_vertices", "spins_to_vertices", or "trj_to_vertices".trj
         If an object is given to create a vertex array, do so.
         ---------
         Parameters:
@@ -240,7 +241,7 @@ class vertices():
                 i:self.edges.query("start==@i | end==@i").index.values
                 for i,v in self.vertices.iterrows()}
 
-    def infer_topology(self, ice, positions=None, method = "crossings", tol = 0.01):
+    def infer_topology(self, ice, positions=None, method = "crossings", tol = 0.01, nptol=1.1):
         """ Infer the topology from the spin structure.
         ------------
         Parameters:
@@ -253,7 +254,7 @@ class vertices():
         spins = ice_to_spins(ice)
 
         neighbor_pairs = calculate_neighbor_pairs(spins['Center'])
-        neighbor_pairs = from_neighbors_get_nearest_neighbors(neighbor_pairs)
+        neighbor_pairs = from_neighbors_get_nearest_neighbors(neighbor_pairs,tol=nptol)
         neighbor_pairs = get_vertices_positions(neighbor_pairs,spins)
 
         positions, inverse, copies = unique_points(
@@ -319,7 +320,7 @@ class vertices():
 
         return self
 
-    def trj_to_vertices(self, trj, positions = None, id_label = "id", static = True):
+    def trj_to_vertices(self, trj, positions = None, id_label = "id", static = True, tol=1.1):
         """ Convert a trj into a vertex array.
         If trj is a MultiIndex, an array will be saved that has the same internal structure as the passed array, but the identifying column will now refer to vertex numbers.
         ---------
@@ -329,12 +330,12 @@ class vertices():
         * static (boolean, True): If the topology of the traps doesn't change, then time can be saved by not recalculating neighbors. Setting this variable to true indicates if static topology can be assumed in case of a MultiIndex.
         """
 
-        def trj_to_vertices_single_frame(trj_frame):
+        def trj_to_vertices_single_frame(trj_frame,tol=1.1):
 
             spins = ice_to_spins(trj_frame)
 
             if len(self.vertices)==0:
-                self.infer_topology(spins, positions=positions)
+                self.infer_topology(spins, positions=positions,nptol=tol)
                 self.update_directions(spins)
 
             else:
@@ -346,12 +347,11 @@ class vertices():
 
         if trj.index.nlevels==1:
 
-            self.vertices = trj_to_vertices_single_frame(trj)
+            self.vertices = trj_to_vertices_single_frame(trj,tol=tol)
 
             return self
 
         else:
-
             # This case runs when trj.index has more than one level.
             # It automatically looks for the level that contains the particle ID
             # and iterates along all other dimensions.
@@ -367,7 +367,7 @@ class vertices():
                 other_i_sc=other_i
 
             self.dynamic_array = pd.concat(
-                    {o_i:trj_to_vertices_single_frame(trj_oi)
+                    {o_i:trj_to_vertices_single_frame(trj_oi,tol=tol)
                         for o_i, trj_oi in tqdm.tqdm(trj.groupby(other_i_sc))},
                     names = other_i)
 

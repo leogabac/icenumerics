@@ -1,5 +1,6 @@
 from icenumerics.spins import *
 from icenumerics.colloidalice import colloidal_ice
+from icenumerics.vertices import count_vertices
 import os
 import sys
 
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import scipy.spatial as sptl
 import pandas as pd
+from numba import jit,prange,float64,int64,complex128
 
 def unwrap_trj(trj,bounds):
     """ Unwraps trj around periodic boundaries"""
@@ -82,6 +84,9 @@ def get_ice_trj(trj,bounds, atom_types = None, trap_types = None):
     colloids = atoms-traps
     colloids = colloids[["x","y","z"]]
     colloids.columns = ["cx","cy","cz"]
+
+    colloids = colloids.dropna()
+
     traps = pd.concat([traps,colloids],axis=1)
     colloids = []
     atoms = []
@@ -341,3 +346,134 @@ def animate(trj, sl = slice(0,-1,1), region = None, radius = None, ax = None, si
     plt.close(anim._fig)
 
     return anim
+
+
+# since there is no particular order, I will start here
+@jit(nopython=True)
+def get_idx_from_position(centers,pos,tol=0.1):
+    """
+        Get the index in the centers array from a position vector.
+        ----------
+        * centers: centers of the traps
+        * pos: np array with a 3D coordinate
+    """
+
+    for i,center in enumerate(centers):
+        distance = np.linalg.norm(center - pos)
+        if np.isclose(0,distance,atol=tol):
+            return i
+
+def is_horizontal(direction):
+    """
+        Checks if a given direction is horizontal.
+        ----------
+        Parameters:
+        * direction
+    """
+    x = np.array([1,0,0])
+    x_dot_dir = np.dot(direction,x)
+
+    return isclose(abs(x_dot_dir),1,rel_tol=1e-3)
+
+@jit(nopython=True)
+def fix_position(position,a,size):
+    """
+        Fixes the position to fit in the box
+        0 < x < size*a, and
+        0 < y < size*a
+        ----------
+        Parameters:
+        * position: Position vector in 3D
+        * a: lattice constant
+        * size: size of the system
+    """
+    L = size*a
+
+# Apply BC to x
+    position[0] = position[0] % L
+    if position[0] < 0:
+        position[0] += L
+
+# Apply BC to y
+    position[1] = position[1] % L
+    if position[1] < 0:
+        position[1] += L
+
+    return position
+
+def classify_vertices(vrt):
+    """
+        Classifies the vertices in I, II, III, IV, V, VI types.
+        Returns a DataFrame
+        ----------
+        Parameters:
+        * vrt (pd Dataframe): Vertices df
+    """
+
+    vrt["type"] = ['tmp'] * len(vrt)
+
+    vrt.loc[vrt.eval("coordination==4 & charge == -4"),"type"] = 'I'
+    vrt.loc[vrt.eval("coordination==4 & charge == -2"),"type"] = 'II'
+    vrt.loc[vrt.eval("coordination==4 & charge == 0 & (dx**2+dy**2)==0"),"type"] = 'III'
+    vrt.loc[vrt.eval("coordination==4 & charge == 0 & (dx**2+dy**2)>0"),"type"] = 'IV'
+    vrt.loc[vrt.eval("coordination==4 & charge == 2"),"type"] = 'V'
+    vrt.loc[vrt.eval("coordination==4 & charge == 4"),"type"] = 'VI'
+    return vrt
+
+def vrt_dict(vrt_path):
+    """
+        Walks path and imports all DFs into a Dictionary, classifies the vertices and drops boundaries.
+        Returns a dictionary with all the DataFrames.
+        ----------
+        Parameters:
+        * vrt_path: Path where the vertices are located.
+    """
+
+    # get a list of the filenames
+    all_files = os.listdir(vrt_path)
+    trj_files = [file for file in all_files if file.startswith('vertices')]
+
+    vrt_dict = {} # Initialize
+    realizations = len(trj_files)
+
+    # loop all the files and classify
+    for i,file in enumerate(trj_files):
+        file_path = os.path.join(vrt_path,file)
+
+        vrt = pd.read_csv(file_path, index_col=['frame','vertex'])
+        vrt = classify_vertices(vrt)
+
+        # drop nan and tmp
+        vrt = vrt.dropna()
+        vrt = vrt[vrt['type']!='tmp']
+        vrt_dict[i+1] = vrt
+    return vrt_dict
+
+def vrt_counts(vertices_dict):
+    """
+        Loops the vrt_dict with all realiztions and gets the counts for vertex type
+        Returns a dictionary with the counts DF for all experiments
+        ----------
+        Parameters:
+        * vertices_dict: Dictionary from vrt_dict()
+    """
+
+    return {i:count_vertices(vertices) for i,vertices in vertices_dict.items()}
+
+def vrt_averages(data_path, max_frame=6000):
+    vertices = vrt_dict(data_path)
+    counts = vrt_counts(vertices)
+
+    # take all the fractions
+    # concat in a df 
+    # take average
+    # get until max frame
+    mean_counts = pd.concat(
+        [stuff.fraction for stuff in counts.values()],axis=1
+    ).dropna().mean(axis=1).reset_index().query(f'frame<={max_frame}').set_index(['frame','type'])
+
+    return mean_counts
+
+def unstack(df,col_names = ['I','II','III','IV','V','VI']):
+    # try to at some point do this automatically
+    return pd.DataFrame(df.unstack(level='type').to_numpy(),columns=col_names)
