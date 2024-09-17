@@ -1,6 +1,6 @@
 from icenumerics.spins import *
-from icenumerics.colloidalice import colloidal_ice
-from icenumerics.vertices import count_vertices
+from icenumerics.colloidalice import colloidal_ice,particle,trap
+from icenumerics.vertices import count_vertices, vertices
 import os
 import sys
 
@@ -10,6 +10,142 @@ import matplotlib
 import scipy.spatial as sptl
 import pandas as pd
 from numba import jit,prange,float64,int64,complex128
+
+class trajectory:
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return f'Trajectory at {self.path}'
+
+    def load(self):
+        """ Loads trj file into dataframe """
+
+        self.trj = pd.read_csv(self.path,index_col = ['frame','id'])
+
+    def get_vertices(self,path):
+        """ Loads the corresponding vertices into a vertices object. """
+
+        v = vertices()
+        v.load(path)
+        return v
+
+    def slice(self,frame):
+        """ Retrive specific frame """
+
+        return self.trj.reset_index().query(f'frame=={frame}').set_index(['frame','id'])
+
+    def profile(self,axes=None):
+        """ Plots the magnetic field profile from the loaded trj """
+
+        if axes is None:
+            fig, axes = plt.subplots(1,3,figsize=(10,2))
+
+        df = self.trj.xs(1,level='id')
+
+        slices = ['mux','muy','muz']
+        labels = ['$\\sim B_x$','$\\sim B_y$','$\\sim B_z$']
+
+        for i,(sl,tex) in enumerate(zip(slices,labels)):
+            axes[i].plot(df.t,df[sl])
+            axes[i].set_xlabel('$t$ (s)')
+            axes[i].set_title(tex)
+            axes[i].ticklabel_format(axis='y',style='sci',scilimits=(0,0))
+
+    plt.show()
+
+    def paint_frame(self,v,params,path,frame,set_title,region):
+        """ Plots a frame and saves it"""
+
+        fig, ax = plt.subplots(figsize=(10,10))
+
+        draw_frame(self.trj, frame_no=frame,
+                   region=region,
+                   radius=params['particle_radius'].magnitude,
+                   cutoff=params['trap_sep'].magnitude/2,
+                   particle_color='#75b7ea',
+                   trap_color='gray',
+                   ax=ax)
+        ax.set_title(set_title,fontsize=25)
+
+        v.display(ax,sl=frame)
+
+        fig.savefig(os.path.join(path,f'{frame}.png'), bbox_inches='tight')
+        plt.close(fig)
+
+    def to_colloids(self,params):
+        """
+            Reconstruct the colloidal ice object from simulation parameters.
+            ----------
+            Parameters:
+            * params: Dictionary with all simulation parameters
+        """
+        part = particle(radius = params["particle_radius"],
+            susceptibility = params["particle_susceptibility"],
+            diffusion = params["particle_diffusion"],
+            temperature = params["particle_temperature"],
+            density = params["particle_density"])
+
+        trp = trap(trap_sep = params["trap_sep"],
+            height = params["trap_height"],
+            stiffness = params["trap_stiffness"])
+
+        particle_radius = params["particle_radius"]
+        a = params["lattice_constant"]
+        N = params["size"]
+
+        centers = self.trj[['x','y','z']].to_numpy() * ureg.um
+        directions = self.trj[['dx','dy','dz']].to_numpy() * ureg.um
+        arrangement = {
+            "centers":centers,
+            "directions":directions
+        }
+
+        col = colloidal_ice(arrangement, part, trp,
+                            height_spread=0,
+                            susceptibility_spread=0.1,
+                            periodic=True)
+        col.region = np.array(
+            [[0,0,-3*(particle_radius/a/N).magnitude],
+             [1,1,3*(particle_radius/a/N).magnitude]]
+        )*N*a
+        return col
+
+# ================================= END OF CLASS ================================= #
+
+def export_frames(trj:trajectory, v:vertices, params:dict, savepath:str, frames:list, titles:list[str], workers:int = 5):
+    """ Export the frames and make an animation with ffmpeg """
+
+    if not os.path.isdir(savepath):
+        os.mkdir(savepath)
+
+    # this takes charge of paralell stuff
+    print('wip')
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        results = list(
+            executor.map(
+                trj.paint_frame,
+                [v]*len(frames),
+                [params]*len(frames),
+                [savepath]*len(frames),
+                frames,
+                titles,
+                [[0,300,0,300]]*len(frames)
+            )
+        )
+
+    # running ffmpeg
+    ipath = f'{savepath}/%d.png'
+    opath = f'{savepath}/output.mp4'
+    ffmpeg = [
+        'ffmpeg -framerate 15 -i',
+        ipath,
+        '-vf "scale=trunc(iw/2)*2:trunc(ih/2)*2"',
+        '-c:v libx264 -pix_fmt yuv420p',
+        opath
+    ]
+    os.system(' '.join(ffmpeg))
 
 def unwrap_trj(trj,bounds):
     """ Unwraps trj around periodic boundaries"""
@@ -498,3 +634,7 @@ def unstack(df,col_names = ['I','II','III','IV','V','VI']):
 
 def test():
     print('oli')
+
+def index_as(df, astype=int):
+    return  df.index.set_levels([level.astype(astype) for level in df.index.levels])
+

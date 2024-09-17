@@ -241,6 +241,10 @@ class vertices():
                 i:self.edges.query("start==@i | end==@i").index.values
                 for i,v in self.vertices.iterrows()}
 
+    def load(self,path):
+        vrt = pd.read_csv(path,index_col=['frame','vertex'])
+        self.vertices = vrt
+
     def infer_topology(self, ice, positions=None, method = "crossings", tol = 0.01, nptol=1.1):
         """ Infer the topology from the spin structure.
         ------------

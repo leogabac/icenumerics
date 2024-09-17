@@ -183,11 +183,11 @@ def do_vertices(params,data_path):
     return t, vrt_cuentas
 
 
-def trj2col(params,ctrj):
     """
-        Reconstruct the colloidal ice object from simulation parameters.
+def trj2col(params,ctrj):
         Notice that this version uses a params dict.
         ----------
+        Reconstruct the colloidal ice object from simulation parameters.
         Parameters:
         * ctrj (pd Dataframe): lammps ctrj without "t" and "type" columns
         * params: Dictionary with all simulation parameters
