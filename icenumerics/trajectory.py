@@ -349,10 +349,7 @@ def draw_frame(trj, frame_no = -1, region = None, radius = None, ax = None, sim 
 
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
-    ax.set_xlim(region[0],region[1])
-    ax.set_ylim(region[2],region[3])
-    ax.set(aspect='equal')
-
+    
     frames = trj.index.get_level_values("frame").unique()
 
     if "type" in trj.columns:
@@ -389,6 +386,15 @@ def draw_frame(trj, frame_no = -1, region = None, radius = None, ax = None, sim 
 
     for p in patches:
         ax.add_patch(p)
+
+    # setting the region and other axes parameters
+    if region is not None:
+        ax.set_xlim(region[0],region[1])
+        ax.set_ylim(region[2],region[3])
+    else:
+        ax.autoscale_view()
+
+    ax.set(aspect='equal')
     return patches
 
 def animate(trj, sl = slice(0,-1,1), region = None, radius = None, ax = None, sim = None, atom_type = 1, trap_type = 2, cutoff = None, framerate = None, verb=False, start=0, end=False, step = 1, speedup = 1, preserve_limits = False):
